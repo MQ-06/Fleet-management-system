@@ -41,6 +41,13 @@ app.use('/api/users', userRoutes);
 const supplierRoutes = require('./routes/supplierRoutes');
 app.use('/api/suppliers', supplierRoutes);
 
+const fleetRoutes = require('./routes/fleetRoutes');
+app.use('/api/fleets', fleetRoutes);
+
+const vehicleRoutes = require('./routes/vehicleRoutes');
+app.use('/api/vehicles', vehicleRoutes);
+
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

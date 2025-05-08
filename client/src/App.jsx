@@ -9,6 +9,8 @@ import CustomersPage from './features/customers/CustomerList';
 import SubscribersPage from './features/Subscribers/SubscribersPage';
 import UsersPage from './features/users/Users'
 import SuppliersPage from './features/suppliers/SuppliersPage';
+import FleetsPage from './features/fleets/FleetsPage';
+import VehiclesPage from './features/vehicles/VehiclePage';
 
 function App() {
   return (
@@ -24,6 +26,10 @@ function App() {
         <Route path="/admin/subscribers" element={<SubscribersPage />} />
         <Route path="/admin/users" element={<UsersPage />} />
         <Route path="/admin/suppliers" element={<SuppliersPage />} />
+        <Route path="/admin/fleets" element={<FleetsPage />} />
+        <Route path="/admin/vehicles" element={<VehiclesPage />} />
+
+
 
 
 
