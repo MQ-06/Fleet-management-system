@@ -11,6 +11,7 @@ import UsersPage from './features/users/Users'
 import SuppliersPage from './features/suppliers/SuppliersPage';
 import FleetsPage from './features/fleets/FleetsPage';
 import VehiclesPage from './features/vehicles/VehiclePage';
+import RepairCategoriesPage from './features/repair_and_maintenance/RepairCategoriesPage';
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
         <Route path="/admin/suppliers" element={<SuppliersPage />} />
         <Route path="/admin/fleets" element={<FleetsPage />} />
         <Route path="/admin/vehicles" element={<VehiclesPage />} />
+        <Route path="/admin/repair-categories" element={<RepairCategoriesPage />} />
+
 
 
 

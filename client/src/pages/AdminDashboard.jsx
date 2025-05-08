@@ -1,4 +1,4 @@
-import { FaGlobe, FaCreditCard, FaBuilding, FaCogs, FaPercentage, FaUsers,FaTools,FaTruck,FaCar } from 'react-icons/fa';
+import { FaGlobe, FaCreditCard, FaBuilding, FaCogs, FaPercentage, FaUsers,FaTools,FaTruck,FaCar,FaWrench  } from 'react-icons/fa';
 import DashboardCard from '@/components/ui/DashboardCard';
 import { MdManageAccounts } from 'react-icons/md';
 
@@ -26,6 +26,8 @@ const AdminDashboard = () => {
           <DashboardCard to="/admin/suppliers" icon={FaTools} label="Manage Suppliers" /> 
           <DashboardCard to="/admin/fleets" icon={FaTruck} label="Manage Fleets" />
           <DashboardCard to="/admin/vehicles" icon={FaCar} label="Manage Vehicles" />
+          <DashboardCard to="/admin/repair-categories" icon={FaWrench} label="Manage Repair Categories" />
+
 
 
 
