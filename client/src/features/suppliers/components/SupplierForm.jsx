@@ -1,8 +1,9 @@
+// src/pages/components/SupplierForm.jsx
 import { useEffect, useState } from 'react';
 import { fetchCustomers } from '@/services/customerService';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
-const SupplierForm = ({ onSubmit }) => {
+const SupplierForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) => {
   const [form, setForm] = useState({
     customer: '',
     name: '',
@@ -18,7 +19,6 @@ const SupplierForm = ({ onSubmit }) => {
     },
     type: ''
   });
-
   const [logoFile, setLogoFile] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [errors, setErrors] = useState({});
@@ -27,11 +27,22 @@ const SupplierForm = ({ onSubmit }) => {
     fetchCustomers().then(res => setCustomers(res.data)).catch(() => setCustomers([]));
   }, []);
 
+  useEffect(() => {
+    if (initialValues && isEdit) {
+      setForm({
+        ...initialValues,
+        address: initialValues.address || {
+          street: '', city: '', state: '', zip: '', country: ''
+        }
+      });
+    }
+  }, [initialValues, isEdit]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.startsWith('address.')) {
-      const addrKey = name.split('.')[1];
-      setForm({ ...form, address: { ...form.address, [addrKey]: value } });
+      const key = name.split('.')[1];
+      setForm({ ...form, address: { ...form.address, [key]: value } });
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -80,15 +91,10 @@ const SupplierForm = ({ onSubmit }) => {
           className="hidden"
           id="logo-upload"
         />
-        <label
-          htmlFor="logo-upload"
-          className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
-        >
+        <label htmlFor="logo-upload" className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
           Choose Logo
         </label>
-        {logoFile && (
-          <p className="mt-2 text-sm text-gray-600">Selected: {logoFile.name}</p>
-        )}
+        {logoFile && <p className="mt-2 text-sm text-gray-600">Selected: {logoFile.name}</p>}
       </div>
 
       <div>
@@ -124,7 +130,6 @@ const SupplierForm = ({ onSubmit }) => {
       </div>
 
       <div className="md:col-span-2 font-semibold">Address</div>
-
       {['street', 'city', 'state', 'zip', 'country'].map((field) => (
         <div key={field}>
           <label className="capitalize">{field}</label>
@@ -151,12 +156,10 @@ const SupplierForm = ({ onSubmit }) => {
         <ErrorMessage message={errors.type} />
       </div>
 
-      <div className="md:col-span-2 text-right">
-        <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow"
-          type="submit"
-        >
-          Save Supplier
+      <div className="md:col-span-2 flex justify-end gap-4">
+        
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
+          {isEdit ? 'Update Supplier' : 'Save Supplier'}
         </button>
       </div>
     </form>

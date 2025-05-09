@@ -1,12 +1,15 @@
-import axios from 'axios';
+// services/supplierService.js
+import api from './api';
 
 export const fetchSuppliers = () =>
-  axios.get('http://localhost:5000/api/suppliers');
+  api.get('/suppliers');
 
 export const addSupplier = (formData) =>
-  axios.post('http://localhost:5000/api/suppliers', formData, {
+  api.post('/suppliers', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
-
-  
+export const updateSupplier = (id, formData) =>
+  api.put(`/suppliers/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });

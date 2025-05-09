@@ -1,13 +1,16 @@
+// src/pages/SuppliersPage.jsx
 import { useEffect, useState } from 'react';
-import { fetchSuppliers, addSupplier } from '@/services/supplierService';
-import { fetchCustomers } from '@/services/customerService';
+import { fetchSuppliers, addSupplier, updateSupplier } from '@/services/supplierService';
 import SupplierForm from './components/SupplierForm';
 import BackButton from '@/components/ui/BackButton';
+import EditModal from '@/components/ui/EditModal';
+import EditButton from '@/components/ui/EditButton';
 
 const SuppliersPage = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editingSupplier, setEditingSupplier] = useState(null);
 
   const loadSuppliers = async () => {
     try {
@@ -35,6 +38,16 @@ const SuppliersPage = () => {
     }
   };
 
+  const handleUpdate = async (data) => {
+    try {
+      await updateSupplier(editingSupplier._id, data);
+      setEditingSupplier(null);
+      loadSuppliers();
+    } catch (err) {
+      console.error('Failed to update supplier:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
@@ -57,13 +70,14 @@ const SuppliersPage = () => {
               <th className="p-2 text-left">Type</th>
               <th className="p-2 text-left">Phone</th>
               <th className="p-2 text-left">Email</th>
+              <th className="p-2 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="5" className="text-center py-4">Loading...</td></tr>
+              <tr><td colSpan="6" className="text-center py-4">Loading...</td></tr>
             ) : suppliers.length === 0 ? (
-              <tr><td colSpan="5" className="text-center py-4">No suppliers found.</td></tr>
+              <tr><td colSpan="6" className="text-center py-4">No suppliers found.</td></tr>
             ) : (
               suppliers.map((s) => (
                 <tr key={s._id} className="border-t">
@@ -72,6 +86,9 @@ const SuppliersPage = () => {
                   <td className="p-2 capitalize">{s.type}</td>
                   <td className="p-2">{s.phone}</td>
                   <td className="p-2">{s.email}</td>
+                  <td className="p-2">
+                    <EditButton onClick={() => setEditingSupplier(s)} />
+                  </td>
                 </tr>
               ))
             )}
@@ -87,6 +104,17 @@ const SuppliersPage = () => {
             <SupplierForm onSubmit={handleAdd} />
           </div>
         </div>
+      )}
+
+      {editingSupplier && (
+        <EditModal isOpen={!!editingSupplier} onClose={() => setEditingSupplier(null)} title="Edit Supplier">
+          <SupplierForm
+            initialValues={editingSupplier}
+            isEdit
+            onClose={() => setEditingSupplier(null)}
+            onSubmit={handleUpdate}
+          />
+        </EditModal>
       )}
     </div>
   );

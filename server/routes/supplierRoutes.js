@@ -1,10 +1,10 @@
+// routes/supplierRoutes.js
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const supplierController = require('../controllers/supplierController');
 
-// File upload setup
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/supplier-logos');
@@ -20,5 +20,6 @@ const upload = multer({ storage });
 
 router.get('/', supplierController.getSuppliers);
 router.post('/', upload.single('logo'), supplierController.createSupplier);
+router.put('/:id', upload.single('logo'), supplierController.updateSupplier);
 
 module.exports = router;

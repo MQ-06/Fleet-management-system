@@ -1,12 +1,16 @@
+// ✅ src/pages/RepairCategoriesPage.jsx
 import { useEffect, useState } from 'react';
-import { fetchRepairCategories } from '@/services/repairCategoryService';
+import { fetchRepairCategories, addRepairCategory, updateRepairCategory } from '@/services/repairCategoryService';
 import BackButton from '@/components/ui/BackButton';
+import EditButton from '@/components/ui/EditButton';
+import EditModal from '@/components/ui/EditModal';
 import RepairCategoryForm from './components/RepairCategoryForm';
 
 const RepairCategoriesPage = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
 
   const loadCategories = async () => {
     try {
@@ -25,22 +29,38 @@ const RepairCategoriesPage = () => {
 
   const handleSuccess = () => {
     setShowModal(false);
+    setEditingCategory(null);
     loadCategories();
+  };
+
+  const handleEditSubmit = async (updatedData) => {
+    await updateRepairCategory(editingCategory._id, updatedData);
+    handleSuccess();
   };
 
   return (
     <div className="min-h-screen bg-white text-black p-4">
-      {showModal && (
+      {(showModal || editingCategory) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start md:items-center pt-10 md:pt-0 z-50 overflow-auto">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl relative p-6">
             <button
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                setEditingCategory(null);
+              }}
               className="absolute top-3 right-4 text-gray-500 hover:text-blue-700 text-2xl font-bold"
             >
               &times;
             </button>
-            <h2 className="text-xl font-bold text-blue-700 mb-4">Add New Category</h2>
-            <RepairCategoryForm onSuccess={handleSuccess} />
+            <h2 className="text-xl font-bold text-blue-700 mb-4">
+              {editingCategory ? 'Edit Category' : 'Add New Category'}
+            </h2>
+            <RepairCategoryForm
+              onSuccess={handleSuccess}
+              initialValues={editingCategory}
+              isEdit={!!editingCategory}
+              onSubmit={editingCategory ? handleEditSubmit : undefined}
+            />
           </div>
         </div>
       )}
@@ -68,6 +88,7 @@ const RepairCategoriesPage = () => {
                 <th className="p-3">Category (EN)</th>
                 <th className="p-3">Category (ES)</th>
                 <th className="p-3">Suppliers</th>
+                <th className="p-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -78,14 +99,15 @@ const RepairCategoriesPage = () => {
                     <td className="p-3">{item.type}</td>
                     <td className="p-3">{item.categoryEn}</td>
                     <td className="p-3">{item.categoryEs}</td>
+                    <td className="p-3">{item.supplierTypes?.map((s) => s.type).join(', ')}</td>
                     <td className="p-3">
-                      {item.supplierTypes?.map((s) => s.type).join(', ')}
+                      <EditButton onClick={() => setEditingCategory(item)} />
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-4 text-center text-gray-400">
+                  <td colSpan="6" className="p-4 text-center text-gray-400">
                     No categories found.
                   </td>
                 </tr>

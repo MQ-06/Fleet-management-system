@@ -1,3 +1,4 @@
+// controllers/supplierController.js
 const Supplier = require('../models/Supplier');
 
 exports.getSuppliers = async (req, res) => {
@@ -21,7 +22,6 @@ exports.createSupplier = async (req, res) => {
       address
     } = req.body;
 
-    // Safe JSON parsing fallback
     const parsedAddress = typeof address === 'string' ? JSON.parse(address) : address;
 
     const supplier = new Supplier({
@@ -38,8 +38,43 @@ exports.createSupplier = async (req, res) => {
     await supplier.save();
     res.status(201).json(supplier);
   } catch (error) {
-    console.error('CREATE SUPPLIER ERROR:', error); // add this for better debugging
+    console.error('CREATE SUPPLIER ERROR:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
+exports.updateSupplier = async (req, res) => {
+  try {
+    const {
+      customer,
+      name,
+      contactPerson,
+      phone,
+      email,
+      type,
+      address
+    } = req.body;
+
+    const parsedAddress = typeof address === 'string' ? JSON.parse(address) : address;
+
+    const updatedData = {
+      customer,
+      name,
+      contactPerson,
+      phone,
+      email,
+      type,
+      address: parsedAddress
+    };
+
+    if (req.file) {
+      updatedData.logo = `/uploads/supplier-logos/${req.file.filename}`;
+    }
+
+    const supplier = await Supplier.findByIdAndUpdate(req.params.id, updatedData, { new: true });
+    res.json(supplier);
+  } catch (error) {
+    console.error('UPDATE SUPPLIER ERROR:', error);
+    res.status(500).json({ error: error.message });
+  }
+};

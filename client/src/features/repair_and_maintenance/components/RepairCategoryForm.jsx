@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import Select from 'react-select';
-import { addRepairCategory } from '@/services/repairCategoryService';
+import { addRepairCategory, updateRepairCategory } from '@/services/repairCategoryService';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
-const RepairCategoryForm = ({ onSuccess }) => {
+const RepairCategoryForm = ({ onSuccess, initialValues = {}, isEdit = false }) => {
   const [form, setForm] = useState({
     customer: '',
     type: 'repair',
@@ -31,6 +31,16 @@ const RepairCategoryForm = ({ onSuccess }) => {
     loadSuppliers();
   }, []);
 
+  useEffect(() => {
+    if (isEdit && initialValues) {
+      setForm({
+        ...initialValues,
+        customer: initialValues.customer?._id || '',
+        supplierTypes: initialValues.supplierTypes?.map((s) => s._id) || [],
+      });
+    }
+  }, [initialValues, isEdit]);
+
   const validate = () => {
     const newErrors = {};
     if (!form.customer) newErrors.customer = 'Customer is required';
@@ -52,7 +62,12 @@ const RepairCategoryForm = ({ onSuccess }) => {
       return;
     }
 
-    await addRepairCategory(form);
+    if (isEdit && initialValues._id) {
+      await updateRepairCategory(initialValues._id, form);
+    } else {
+      await addRepairCategory(form);
+    }
+
     onSuccess();
   };
 
@@ -120,8 +135,6 @@ const RepairCategoryForm = ({ onSuccess }) => {
         <Select
           isMulti
           name="supplierTypes"
-          className="react-select-container"
-          classNamePrefix="react-select"
           options={suppliers.map((s) => ({ value: s._id, label: s.type }))}
           value={suppliers
             .filter((s) => form.supplierTypes.includes(s._id))
@@ -140,7 +153,7 @@ const RepairCategoryForm = ({ onSuccess }) => {
           type="submit"
           className="bg-primary text-white px-6 py-2 rounded hover:brightness-105 transition"
         >
-          Save
+          {isEdit ? 'Update Category' : 'Save Category'}
         </button>
       </div>
     </form>
