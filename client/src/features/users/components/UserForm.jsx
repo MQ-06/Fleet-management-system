@@ -1,11 +1,12 @@
+// src/components/UserForm.jsx
 import { useEffect, useState } from 'react';
 import { fetchCustomers } from '@/services/customerService';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
-const UserForm = ({ onSubmit }) => {
+const UserForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) => {
   const initialFormState = {
-    name: '',
+    firstName: '',
     lastName: '',
     email: '',
     password: '',
@@ -14,7 +15,7 @@ const UserForm = ({ onSubmit }) => {
     active: true,
   };
 
-  const [form, setForm] = useState(initialFormState);
+  const [form, setForm] = useState({ ...initialFormState, ...initialValues });
   const [customers, setCustomers] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -25,6 +26,12 @@ const UserForm = ({ onSubmit }) => {
       .then((res) => setCustomers(res.data))
       .catch(() => setError('Failed to load customers'));
   }, []);
+
+  useEffect(() => {
+    if (isEdit && initialValues) {
+      setForm({ ...initialFormState, ...initialValues });
+    }
+  }, [initialValues, isEdit]);
 
   const handleChange = (e) => {
     const { name, value, type: inputType, checked } = e.target;
@@ -60,7 +67,7 @@ const UserForm = ({ onSubmit }) => {
 
     const { email, password, type, customer } = form;
 
-    if (!form.name || !form.lastName || !email || !password || !type) {
+    if (!form.firstName || !form.lastName || !email || (!isEdit && !password) || !type) {
       setError('❌ Please fill in all required fields.');
       return;
     }
@@ -75,14 +82,16 @@ const UserForm = ({ onSubmit }) => {
       return;
     }
 
-    if (getPasswordStrength(password) !== 'Strong') {
-      setError('❌ Password must include at least 8 characters, upper/lower case letters, a number, and a symbol.');
+    if (!isEdit && getPasswordStrength(password) !== 'Strong') {
+      setError('❌ Password must be strong: include 8+ characters, upper/lower case, number & symbol.');
       return;
     }
 
-    onSubmit({ ...form });
-    setForm(initialFormState);
-    setPasswordStrength('');
+    const finalForm = { ...form };
+    if (isEdit) delete finalForm.password;
+
+    onSubmit(finalForm);
+    if (!isEdit) setForm(initialFormState);
   };
 
   const strengthColor = {
@@ -101,8 +110,8 @@ const UserForm = ({ onSubmit }) => {
       )}
 
       <div>
-        <label className="block mb-1 font-medium">Name</label>
-        <input name="name" value={form.name} onChange={handleChange} className="input-style" />
+        <label className="block mb-1 font-medium">First Name</label>
+        <input name="firstName" value={form.firstName} onChange={handleChange} className="input-style" />
       </div>
 
       <div>
@@ -115,33 +124,35 @@ const UserForm = ({ onSubmit }) => {
         <input name="email" type="email" value={form.email} onChange={handleChange} className="input-style" />
       </div>
 
-      <div className="md:col-span-2 relative">
-        <label className="block mb-1 font-medium">Password</label>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          className="input-style pr-10"
-        />
-        <span
-          onClick={() => setShowPassword((prev) => !prev)}
-          className="absolute right-3 top-9 cursor-pointer text-gray-600"
-        >
-          {showPassword ? <FaEyeSlash /> : <FaEye />}
-        </span>
-        {form.password && (
-          <div className="mt-2">
-            <div className="h-2 rounded-full transition-all duration-300" style={{ width: '100%', backgroundColor: '#e5e7eb' }}>
-              <div className={`h-2 ${strengthColor} rounded-full`}
-                   style={{ width: `${(passwordStrength === 'Weak' ? 25 : passwordStrength === 'Moderate' ? 50 : passwordStrength === 'Good' ? 75 : 100)}%` }} />
+      {!isEdit && (
+        <div className="md:col-span-2 relative">
+          <label className="block mb-1 font-medium">Password</label>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            className="input-style pr-10"
+          />
+          <span
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-9 cursor-pointer text-gray-600"
+          >
+            {showPassword ? <FaEyeSlash /> : <FaEye />}
+          </span>
+          {form.password && (
+            <div className="mt-2">
+              <div className="h-2 rounded-full transition-all duration-300" style={{ width: '100%', backgroundColor: '#e5e7eb' }}>
+                <div className={`h-2 ${strengthColor} rounded-full`}
+                     style={{ width: `${(passwordStrength === 'Weak' ? 25 : passwordStrength === 'Moderate' ? 50 : passwordStrength === 'Good' ? 75 : 100)}%` }} />
+              </div>
+              <div className="text-sm mt-1 text-gray-600">
+                Strength: <span className="font-semibold">{passwordStrength}</span>
+              </div>
             </div>
-            <div className="text-sm mt-1 text-gray-600">
-              Strength: <span className="font-semibold">{passwordStrength}</span>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <div>
         <label className="block mb-1 font-medium">Type</label>
@@ -171,9 +182,7 @@ const UserForm = ({ onSubmit }) => {
         <select
           name="active"
           value={form.active ? 'true' : 'false'}
-          onChange={(e) => {
-            setForm({ ...form, active: e.target.value === 'true' });
-          }}
+          onChange={(e) => setForm({ ...form, active: e.target.value === 'true' })}
           className="input-style"
         >
           <option value="true">Yes</option>
@@ -181,9 +190,10 @@ const UserForm = ({ onSubmit }) => {
         </select>
       </div>
 
-      <div className="md:col-span-2 text-right">
+      <div className="md:col-span-2 flex justify-end gap-4">
+        
         <button type="submit" className="bg-blue-600 text-white py-2 px-6 rounded shadow">
-          Save User
+          {isEdit ? 'Update User' : 'Save User'}
         </button>
       </div>
     </form>

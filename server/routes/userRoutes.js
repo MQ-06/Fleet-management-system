@@ -1,9 +1,10 @@
+// routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/userController'); // ✅ must be a real controller file
+const userController = require('../controllers/userController');
 
-// ✅ These must be real functions in userController
 router.get('/', userController.getUsers);
 router.post('/', userController.createUser);
+router.put('/:id', userController.updateUser); // ✅ Added edit route
 
 module.exports = router;

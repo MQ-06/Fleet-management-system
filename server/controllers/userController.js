@@ -1,3 +1,4 @@
+// controllers/userController.js
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -22,7 +23,7 @@ exports.createUser = async (req, res) => {
       lastName,
       email,
       password: hashedPassword,
-      type, 
+      type,
       customer: customer || undefined,
       active,
     });
@@ -35,3 +36,18 @@ exports.createUser = async (req, res) => {
   }
 };
 
+exports.updateUser = async (req, res) => {
+  try {
+    const { firstName, lastName, email, type, customer, active } = req.body;
+    const updated = await User.findByIdAndUpdate(
+      req.params.id,
+      { firstName, lastName, email, type, customer, active },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'User not found' });
+    res.json(updated);
+  } catch (err) {
+    console.error('Error updating user:', err);
+    res.status(400).json({ error: err.message });
+  }
+};

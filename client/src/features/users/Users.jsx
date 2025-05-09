@@ -1,11 +1,15 @@
+// src/pages/UsersPage.jsx
 import { useEffect, useState } from 'react';
 import BackButton from '@/components/ui/BackButton';
+import EditButton from '@/components/ui/EditButton';
+import EditModal from '@/components/ui/EditModal';
 import UserForm from './components/UserForm';
-import { fetchUsers, createUser } from '@/services/userService';
+import { fetchUsers, createUser, updateUser } from '@/services/userService';
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadUsers = async () => {
@@ -25,11 +29,16 @@ const UsersPage = () => {
     loadUsers();
   };
 
+  const handleUpdate = async (formData) => {
+    await updateUser(editingUser._id, formData);
+    setEditingUser(null);
+    loadUsers();
+  };
+
   useEffect(() => {
     loadUsers();
   }, []);
 
-  // Converts backend role values like 'super_admin' into human-friendly labels
   const formatRoleLabel = (role) => {
     const map = {
       super_admin: 'Super Admin',
@@ -64,16 +73,17 @@ const UsersPage = () => {
                 <th className="p-3 text-left">Type</th>
                 <th className="p-3 text-left">Customer</th>
                 <th className="p-3 text-left">Active</th>
+                <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="p-4 text-center text-gray-500">Loading...</td>
+                  <td colSpan="6" className="p-4 text-center text-gray-500">Loading...</td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-4 text-center text-gray-400">No users found.</td>
+                  <td colSpan="6" className="p-4 text-center text-gray-400">No users found.</td>
                 </tr>
               ) : (
                 users.map((user) => (
@@ -83,6 +93,9 @@ const UsersPage = () => {
                     <td className="p-3">{formatRoleLabel(user.role || user.type)}</td>
                     <td className="p-3">{user.customer?.companyName || '—'}</td>
                     <td className="p-3">{user.active ? 'Yes' : 'No'}</td>
+                    <td className="p-3">
+                      <EditButton onClick={() => setEditingUser(user)} />
+                    </td>
                   </tr>
                 ))
               )}
@@ -104,6 +117,21 @@ const UsersPage = () => {
             <UserForm onSubmit={handleAdd} />
           </div>
         </div>
+      )}
+
+      {editingUser && (
+        <EditModal
+          isOpen={!!editingUser}
+          onClose={() => setEditingUser(null)}
+          title="Edit User"
+        >
+          <UserForm
+            initialValues={editingUser}
+            isEdit
+            onClose={() => setEditingUser(null)}
+            onSubmit={handleUpdate}
+          />
+        </EditModal>
       )}
     </div>
   );

@@ -1,15 +1,22 @@
+// components/FleetForm.jsx
 import { useEffect, useState } from 'react';
 import { fetchCustomers } from '@/services/customerService';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
-const FleetForm = ({ onSubmit }) => {
-  const [form, setForm] = useState({ customer: '', name: '', supervisor: '' });
+const FleetForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) => {
+  const [form, setForm] = useState({ customer: '', name: '', supervisor: '', ...initialValues });
   const [customers, setCustomers] = useState([]);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchCustomers().then(res => setCustomers(res.data)).catch(() => setCustomers([]));
   }, []);
+
+  useEffect(() => {
+    if (initialValues) {
+      setForm({ customer: '', name: '', supervisor: '', ...initialValues });
+    }
+  }, [initialValues]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,9 +67,10 @@ const FleetForm = ({ onSubmit }) => {
         <ErrorMessage message={errors.supervisor} />
       </div>
 
-      <div className="md:col-span-2 text-right">
+      <div className="md:col-span-2 flex justify-end gap-4">
+       
         <button className="bg-blue-600 text-white px-4 py-2 rounded shadow" type="submit">
-          Save Fleet
+          {isEdit ? 'Update Fleet' : 'Save Fleet'}
         </button>
       </div>
     </form>

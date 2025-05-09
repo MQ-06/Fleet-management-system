@@ -1,12 +1,15 @@
+// pages/FleetsPage.jsx
 import { useEffect, useState } from 'react';
-import { fetchFleets, addFleet } from '@/services/fleetService';
-import { fetchCustomers } from '@/services/customerService';
-import FleetForm from './components/FleetForm';
+import { fetchFleets, addFleet, updateFleet } from '@/services/fleetService';
 import BackButton from '@/components/ui/BackButton';
+import EditButton from '@/components/ui/EditButton';
+import EditModal from '@/components/ui/EditModal';
+import FleetForm from './components/FleetForm';
 
 const FleetsPage = () => {
   const [fleets, setFleets] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [editingFleet, setEditingFleet] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadFleets = async () => {
@@ -34,6 +37,16 @@ const FleetsPage = () => {
     }
   };
 
+  const handleUpdate = async (data) => {
+    try {
+      await updateFleet(editingFleet._id, data);
+      setEditingFleet(null);
+      loadFleets();
+    } catch (err) {
+      console.error('Failed to update fleet:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
@@ -54,19 +67,23 @@ const FleetsPage = () => {
               <th className="p-2 text-left">Fleet Name</th>
               <th className="p-2 text-left">Company</th>
               <th className="p-2 text-left">Supervisor</th>
+              <th className="p-2 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="3" className="p-4 text-center">Loading...</td></tr>
+              <tr><td colSpan="4" className="p-4 text-center">Loading...</td></tr>
             ) : fleets.length === 0 ? (
-              <tr><td colSpan="3" className="p-4 text-center">No fleets found.</td></tr>
+              <tr><td colSpan="4" className="p-4 text-center">No fleets found.</td></tr>
             ) : (
               fleets.map((fleet) => (
                 <tr key={fleet._id} className="border-t">
                   <td className="p-2">{fleet.name}</td>
                   <td className="p-2">{fleet.customer?.companyName}</td>
                   <td className="p-2">{fleet.supervisor}</td>
+                  <td className="p-2">
+                    <EditButton onClick={() => setEditingFleet(fleet)} />
+                  </td>
                 </tr>
               ))
             )}
@@ -74,17 +91,30 @@ const FleetsPage = () => {
         </table>
       </div>
 
-      {showModal && (
+      {(showModal || editingFleet) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-3xl relative">
             <button
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                setEditingFleet(null);
+              }}
               className="absolute top-2 right-4 text-gray-500 hover:text-black text-xl"
             >
               &times;
             </button>
-            <h3 className="text-xl font-semibold mb-4 text-blue-700">Add New Fleet</h3>
-            <FleetForm onSubmit={handleAdd} />
+            <h3 className="text-xl font-semibold mb-4 text-blue-700">
+              {editingFleet ? 'Edit Fleet' : 'Add New Fleet'}
+            </h3>
+            <FleetForm
+              initialValues={editingFleet}
+              isEdit={!!editingFleet}
+              onClose={() => {
+                setShowModal(false);
+                setEditingFleet(null);
+              }}
+              onSubmit={editingFleet ? handleUpdate : handleAdd}
+            />
           </div>
         </div>
       )}
