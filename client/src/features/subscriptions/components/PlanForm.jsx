@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Select from 'react-select';
 import { fetchTaxes } from '@/services/taxService';
+import ErrorMessage from '@/components/ui/ErrorMessage';
 
 const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
   const defaultForm = {
@@ -16,6 +17,7 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
 
   const [form, setForm] = useState({ ...defaultForm, ...initialValues });
   const [taxOptions, setTaxOptions] = useState([]);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchTaxes().then((res) => {
@@ -36,6 +38,7 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
+    setErrors((prev) => ({ ...prev, [name]: '' })); 
   };
 
   const handleTaxChange = (selected) => {
@@ -44,9 +47,20 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const newErrors = {};
+    if (!form.name_en.trim()) newErrors.name_en = 'English name is required';
+    if (!form.name_es.trim()) newErrors.name_es = 'Spanish name is required';
+    if (!form.amount || form.amount <= 0) newErrors.amount = 'Amount must be greater than 0';
+    if (!form.fleetAmount || form.fleetAmount <= 0) newErrors.fleetAmount = 'Fleet limit must be greater than 0';
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     onSubmit(form);
     if (!isEdit) {
-      setForm(defaultForm); // reset only if it's an add form
+      setForm(defaultForm);
+      setErrors({});
     }
   };
 
@@ -59,8 +73,8 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
           value={form.name_en}
           onChange={handleChange}
           className="input-style"
-          required
         />
+        <ErrorMessage message={errors.name_en} />
       </div>
 
       <div>
@@ -70,8 +84,8 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
           value={form.name_es}
           onChange={handleChange}
           className="input-style"
-          required
         />
+        <ErrorMessage message={errors.name_es} />
       </div>
 
       <div className="md:col-span-2">
@@ -115,8 +129,8 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
           value={form.amount}
           onChange={handleChange}
           className="input-style"
-          required
         />
+        <ErrorMessage message={errors.amount} />
       </div>
 
       <div className="md:col-span-2">
@@ -137,8 +151,8 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
           value={form.fleetAmount}
           onChange={handleChange}
           className="input-style"
-          required
         />
+        <ErrorMessage message={errors.fleetAmount} />
       </div>
 
       <div className="md:col-span-2 text-right">

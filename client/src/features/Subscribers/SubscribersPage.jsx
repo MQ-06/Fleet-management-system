@@ -1,11 +1,15 @@
+// src/pages/SubscribersPage.jsx
 import { useEffect, useState } from 'react';
 import BackButton from '@/components/ui/BackButton';
-import { fetchSubscribers, createSubscriber } from '@/services/subscriberService';
+import EditButton from '@/components/ui/EditButton';
+import EditModal from '@/components/ui/EditModal';
+import { fetchSubscribers, createSubscriber, updateSubscriber } from '@/services/subscriberService';
 import SubscriberForm from './components/SubscriberForm';
 
 const SubscribersPage = () => {
   const [subscribers, setSubscribers] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingSubscriber, setEditingSubscriber] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadSubscribers = async () => {
@@ -22,6 +26,12 @@ const SubscribersPage = () => {
   const handleAdd = async (formData) => {
     await createSubscriber(formData);
     setShowForm(false);
+    loadSubscribers();
+  };
+
+  const handleUpdate = async (formData) => {
+    await updateSubscriber(editingSubscriber._id, formData);
+    setEditingSubscriber(null);
     loadSubscribers();
   };
 
@@ -58,13 +68,14 @@ const SubscribersPage = () => {
                 <th className="p-3 text-left">Price</th>
                 <th className="p-3 text-left">Renewal Date</th>
                 <th className="p-3 text-left">Status</th>
+                <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="10" className="p-4 text-center text-gray-500">Loading...</td></tr>
+                <tr><td colSpan="11" className="p-4 text-center text-gray-500">Loading...</td></tr>
               ) : subscribers.length === 0 ? (
-                <tr><td colSpan="10" className="p-4 text-center text-gray-400">No subscribers found.</td></tr>
+                <tr><td colSpan="11" className="p-4 text-center text-gray-400">No subscribers found.</td></tr>
               ) : (
                 subscribers.map((sub) => (
                   <tr key={sub._id} className="border-t hover:bg-gray-50 transition">
@@ -78,6 +89,9 @@ const SubscribersPage = () => {
                     <td className="p-3">${sub.price}</td>
                     <td className="p-3">{new Date(sub.nextRenewalDate).toLocaleDateString()}</td>
                     <td className="p-3">{sub.status}</td>
+                    <td className="p-3">
+                      <EditButton onClick={() => setEditingSubscriber(sub)} />
+                    </td>
                   </tr>
                 ))
               )}
@@ -99,6 +113,21 @@ const SubscribersPage = () => {
             <SubscriberForm onSubmit={handleAdd} />
           </div>
         </div>
+      )}
+
+      {editingSubscriber && (
+        <EditModal
+          isOpen={!!editingSubscriber}
+          onClose={() => setEditingSubscriber(null)}
+          title="Edit Subscriber"
+        >
+          <SubscriberForm
+            initialValues={editingSubscriber}
+            isEdit
+            onSubmit={handleUpdate}
+            onClose={() => setEditingSubscriber(null)}
+          />
+        </EditModal>
       )}
     </div>
   );

@@ -78,7 +78,7 @@ const TranslationList = () => {
               <tbody>
                 {data.length > 0 ? (
                   data.map((t) => (
-                    <tr key={t._id} className="border-t border-gray-200 hover:bg-blue-50 transition">
+                    <tr key={t._id} className="border-t border-gray-200 hover:bg-gray-50 transition">
                       <td className="p-3">{t.key}</td>
                       <td className="p-3">{t.en}</td>
                       <td className="p-3">{t.es}</td>

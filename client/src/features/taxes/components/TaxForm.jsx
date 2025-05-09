@@ -3,7 +3,7 @@ import Select from 'react-select';
 import { getCountries, getStatesByCountry, getCitiesByCountry } from '@/services/locationService';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 
-const TaxForm = ({ onSubmit }) => {
+const TaxForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) => {
   const [form, setForm] = useState({
     name: '',
     nameSpanish: '',
@@ -18,6 +18,15 @@ const TaxForm = ({ onSubmit }) => {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+
+  useEffect(() => {
+    if (initialValues) {
+      setForm((prev) => ({
+        ...prev,
+        ...initialValues,
+      }));
+    }
+  }, [initialValues]);
 
   useEffect(() => {
     getCountries().then(setCountries).catch(() => setCountries([]));
@@ -63,7 +72,6 @@ const TaxForm = ({ onSubmit }) => {
 
   return (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Tax Name */}
       <div className="flex flex-col">
         <label className="text-sm text-gray-700 mb-1">Tax Name</label>
         <input
@@ -76,7 +84,6 @@ const TaxForm = ({ onSubmit }) => {
         <ErrorMessage message={errors.name} />
       </div>
 
-      {/* Spanish Name */}
       <div className="flex flex-col">
         <label className="text-sm text-gray-700 mb-1">Nombre Español</label>
         <input
@@ -89,7 +96,6 @@ const TaxForm = ({ onSubmit }) => {
         <ErrorMessage message={errors.nameSpanish} />
       </div>
 
-      {/* Type */}
       <div className="flex flex-col">
         <label className="text-sm text-gray-700 mb-1">Type</label>
         <select
@@ -103,7 +109,6 @@ const TaxForm = ({ onSubmit }) => {
         </select>
       </div>
 
-      {/* Amount */}
       <div className="flex flex-col">
         <label className="text-sm text-gray-700 mb-1">Amount</label>
         <input
@@ -117,7 +122,6 @@ const TaxForm = ({ onSubmit }) => {
         <ErrorMessage message={errors.amount} />
       </div>
 
-      {/* Country */}
       <div className="flex flex-col md:col-span-2">
         <label className="text-sm text-gray-700 mb-1">Country</label>
         <select
@@ -134,7 +138,6 @@ const TaxForm = ({ onSubmit }) => {
         <ErrorMessage message={errors.country} />
       </div>
 
-      {/* States (react-select with All option) */}
       <div className="flex flex-col">
         <label className="text-sm text-gray-700 mb-1">States</label>
         <Select
@@ -156,7 +159,6 @@ const TaxForm = ({ onSubmit }) => {
         />
       </div>
 
-      {/* Cities (react-select with All option) */}
       <div className="flex flex-col">
         <label className="text-sm text-gray-700 mb-1">Cities</label>
         <Select
@@ -178,12 +180,21 @@ const TaxForm = ({ onSubmit }) => {
         />
       </div>
 
-      <div className="md:col-span-2 text-right">
+      <div className="md:col-span-2 flex justify-end gap-4">
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="bg-gray-200 text-gray-800 px-4 py-2 rounded"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded shadow"
         >
-          Save Tax
+          {isEdit ? 'Update Tax' : 'Save Tax'}
         </button>
       </div>
     </form>

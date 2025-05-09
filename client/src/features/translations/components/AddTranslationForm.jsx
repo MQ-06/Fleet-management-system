@@ -36,8 +36,8 @@ const AddTranslationForm = ({ onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-6 rounded shadow">
-      <h3 className="text-lg font-semibold mb-6 text-blue1">Add New Translation</h3>
+    <form onSubmit={handleSubmit} className="mb-6 ">
+      <h3 className="text-lg font-semibold mb-6 text-blue-600">Add New Translation</h3>
 
       <div className="flex flex-col gap-4">
         <div>

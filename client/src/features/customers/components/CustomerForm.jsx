@@ -111,7 +111,6 @@ const CustomerForm = ({ onClose, initialValues = {}, isEdit = false }) => {
         </div>
       )}
 
-      {/* Logo Upload Field */}
       <div className="col-span-2">
         <label className="block text-sm font-medium mb-1">Company Logo</label>
         <input

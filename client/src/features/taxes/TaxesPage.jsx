@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { fetchTaxes, addTax } from '@/services/taxService';
+import { fetchTaxes, addTax, updateTax } from '@/services/taxService';
 import BackButton from '@/components/ui/BackButton';
-import TaxForm from './components/TaxForm'; 
+import EditButton from '@/components/ui/EditButton';
+import EditModal from '@/components/ui/EditModal';
+import TaxForm from './components/TaxForm';
 
 const TaxesPage = () => {
   const [taxes, setTaxes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingTax, setEditingTax] = useState(null);
 
   const loadTaxes = async () => {
     try {
@@ -35,6 +38,16 @@ const TaxesPage = () => {
     }
   };
 
+  const handleUpdate = async (formData) => {
+    try {
+      await updateTax(editingTax._id, formData);
+      setEditingTax(null);
+      loadTaxes();
+    } catch (error) {
+      console.error('Error updating tax:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
@@ -58,24 +71,30 @@ const TaxesPage = () => {
                 <th className="p-3 text-left">Type</th>
                 <th className="p-3 text-left">Amount</th>
                 <th className="p-3 text-left">Country</th>
+                <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="p-4 text-center text-gray-500">Loading...</td>
+                  <td colSpan="5" className="p-4 text-center text-gray-500">Loading...</td>
                 </tr>
               ) : taxes.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="p-4 text-center text-gray-400">No taxes found.</td>
+                  <td colSpan="5" className="p-4 text-center text-gray-400">No taxes found.</td>
                 </tr>
               ) : (
                 taxes.map((tax) => (
                   <tr key={tax._id} className="border-t hover:bg-gray-50 transition">
                     <td className="p-3">{tax.name}</td>
                     <td className="p-3 capitalize">{tax.type}</td>
-                    <td className="p-3">${tax.amount}</td>
+                    <td className="p-3">
+                      {tax.type === 'percentage' ? `${tax.amount}%` : `$${tax.amount}`}
+                    </td>
                     <td className="p-3">{tax.country}</td>
+                    <td className="p-3">
+                      <EditButton onClick={() => setEditingTax(tax)} />
+                    </td>
                   </tr>
                 ))
               )}
@@ -97,6 +116,21 @@ const TaxesPage = () => {
             <TaxForm onSubmit={handleAdd} />
           </div>
         </div>
+      )}
+
+      {editingTax && (
+        <EditModal
+          isOpen={!!editingTax}
+          onClose={() => setEditingTax(null)}
+          title="Edit Tax"
+        >
+          <TaxForm
+            initialValues={editingTax}
+            isEdit
+            onSubmit={handleUpdate}
+            onClose={() => setEditingTax(null)}
+          />
+        </EditModal>
       )}
     </div>
   );

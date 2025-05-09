@@ -21,3 +21,13 @@ exports.addSubscriber = async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 };
+
+exports.updateSubscriber = async (req, res) => {
+  try {
+    const updated = await Subscriber.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ message: 'Subscriber not found' });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
