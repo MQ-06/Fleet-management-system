@@ -47,6 +47,9 @@ app.use('/api/fleets', fleetRoutes);
 const vehicleRoutes = require('./routes/vehicleRoutes');
 app.use('/api/vehicles', vehicleRoutes);
 
+const repairCategoryRoutes = require('./routes/repairCategories');
+app.use('/api/repair-categories', repairCategoryRoutes);
+
 
 
 const PORT = process.env.PORT || 5000;

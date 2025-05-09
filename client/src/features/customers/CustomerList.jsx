@@ -1,12 +1,15 @@
+// CustomersPage.jsx
 import React, { useEffect, useState } from 'react';
 import CustomerForm from './components/CustomerForm';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
+import EditModal from '@/components/ui/EditModal';
 import axios from 'axios';
 
 const CustomersPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [customers, setCustomers] = useState([]);
+  const [editingCustomer, setEditingCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchCustomers = () => {
@@ -56,16 +59,17 @@ const CustomersPage = () => {
               <th className="p-3 text-left">Vehicles</th>
               <th className="p-3 text-left">Current Plan</th>
               <th className="p-3 text-left">Next Renewal</th>
+              <th className="p-3 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="p-4 text-center">Loading...</td>
+                <td colSpan={8} className="p-4 text-center">Loading...</td>
               </tr>
             ) : customers.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-4 text-center text-gray-500">No customers found.</td>
+                <td colSpan={8} className="p-4 text-center text-gray-500">No customers found.</td>
               </tr>
             ) : (
               customers.map(customer => (
@@ -80,6 +84,14 @@ const CustomersPage = () => {
                     {customer.nextRenewalDate
                       ? new Date(customer.nextRenewalDate).toLocaleDateString()
                       : '—'}
+                  </td>
+                  <td className="p-3">
+                    <button
+                      onClick={() => setEditingCustomer(customer)}
+                      className="text-blue-600 underline text-sm"
+                    >
+                      Edit
+                    </button>
                   </td>
                 </tr>
               ))
@@ -102,10 +114,27 @@ const CustomersPage = () => {
             </div>
             <CustomerForm onClose={() => {
               setShowForm(false);
-              fetchCustomers(); // Refresh list after add
+              fetchCustomers();
             }} />
           </div>
         </div>
+      )}
+
+      {editingCustomer && (
+        <EditModal
+          isOpen={!!editingCustomer}
+          onClose={() => setEditingCustomer(null)}
+          title="Edit Customer"
+        >
+          <CustomerForm
+            initialValues={editingCustomer}
+            isEdit
+            onClose={() => {
+              setEditingCustomer(null);
+              fetchCustomers();
+            }}
+          />
+        </EditModal>
       )}
     </div>
   );
