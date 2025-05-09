@@ -1,252 +1,200 @@
-import { useEffect, useState } from 'react';
-import { fetchPlans } from '@/services/planService';
-import { fetchCustomers } from '@/services/customerService';
+import React, { useState, useEffect } from 'react';
+import Button from '@/components/ui/Button';
 import ErrorMessage from '@/components/ui/ErrorMessage';
+import { createCustomer, updateCustomer } from '@/services/customerService';
+import { fetchPlans } from '@/services/planService';
 
-const SubscriberForm = ({ onSubmit }) => {
-  const initialFormState = {
-    customer: '',
-    initialSubscriptionDate: '',
-    initialPlan: '',
-    currentPlan: '',
-    currentPlanDate: '',
-    currentFleetAmount: '',
-    recurrence: 'monthly',
-    price: '',
-    nextRenewalDate: '',
-    status: 'active',
-  };
-
-  const [form, setForm] = useState(initialFormState);
-  const [customers, setCustomers] = useState([]);
+const CustomerForm = ({ onClose, initialValues = {}, isEdit = false }) => {
   const [plans, setPlans] = useState([]);
   const [error, setError] = useState('');
+  const [form, setForm] = useState({
+    companyName: '',
+    logo: null,
+    contactPerson: '',
+    email: '',
+    phone: '',
+    address: { street: '', city: '', state: '', zip: '', country: '' },
+    currentPlan: '',
+    nextRenewalDate: '',
+    vehiclesRegistered: 0,
+  });
 
   useEffect(() => {
-    Promise.all([fetchCustomers(), fetchPlans()])
-      .then(([customerRes, planRes]) => {
-    
-        setCustomers(customerRes.data);
-        setPlans(planRes.data);
+    if (isEdit && initialValues) {
+      setForm({
+        ...initialValues,
+        address: {
+          street: initialValues?.address?.street || '',
+          city: initialValues?.address?.city || '',
+          state: initialValues?.address?.state || '',
+          zip: initialValues?.address?.zip || '',
+          country: initialValues?.address?.country || '',
+        },
+        nextRenewalDate: initialValues.nextRenewalDate ? initialValues.nextRenewalDate.split('T')[0] : ''
+      });
+    }
+  }, [initialValues, isEdit]);
+
+  useEffect(() => {
+    fetchPlans()
+      .then(res => {
+        if (Array.isArray(res.data)) setPlans(res.data);
+        else if (Array.isArray(res.data.plans)) setPlans(res.data.plans);
+        else setPlans([]);
       })
-      .catch((err) => console.error("Error loading data:", err));
+      .catch(() => setPlans([]));
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    let updatedForm = { ...form, [name]: value };
-
-    if (name === 'customer') {
-      const selectedCustomer = customers.find((c) => c._id === value);
-
-      if (selectedCustomer) {
-        updatedForm = {
-          ...updatedForm,
-          currentPlan: selectedCustomer.currentPlan?._id || '',
-          nextRenewalDate: selectedCustomer.nextRenewalDate
-            ? new Date(selectedCustomer.nextRenewalDate).toISOString().split('T')[0]
-            : '',
-        };
-      }
-    }
-
-    setForm(updatedForm);
+  const getSelectedPlanLimit = () => {
+    const selectedPlan = plans.find(p => String(p._id) === String(form.currentPlan));
+    return selectedPlan?.fleetAmount || 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'logo') {
+      setForm(prev => ({ ...prev, logo: files[0] }));
+    } else if (name.startsWith('address.')) {
+      const key = name.split('.')[1];
+      setForm(prev => ({
+        ...prev,
+        address: { ...prev.address, [key]: value }
+      }));
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const {
-      customer,
-      initialSubscriptionDate,
-      initialPlan,
-      currentPlan,
-      currentPlanDate,
-      currentFleetAmount,
-      price,
-      nextRenewalDate,
-    } = form;
+    const fleetLimit = getSelectedPlanLimit();
+    const vehicleCount = parseInt(form.vehiclesRegistered, 10);
 
-    if (
-      !customer ||
-      !initialSubscriptionDate ||
-      !initialPlan ||
-      !currentPlan ||
-      !currentPlanDate ||
-      !currentFleetAmount ||
-      !price ||
-      !nextRenewalDate
-    ) {
-      setError('❌ Please fill in all required fields.');
+    if (vehicleCount > fleetLimit) {
+      setError(`❌ Vehicle count exceeds plan limit (${fleetLimit}).`);
       return;
     }
 
-    const selectedPlan = plans.find((p) => String(p._id) === String(currentPlan));
-    const fleetLimit = selectedPlan?.fleetAmount || 0;
-    const fleetCount = parseInt(currentFleetAmount, 10);
+    const formData = new FormData();
+    Object.entries(form).forEach(([key, value]) => {
+      if (key === 'address') {
+        Object.entries(value).forEach(([subKey, subValue]) => {
+          formData.append(`address[${subKey}]`, subValue);
+        });
+      } else if (key === 'nextRenewalDate' && (!value || value === 'null')) {
+        // skip
+      } else {
+        formData.append(key, value);
+      }
+    });
 
-    if (selectedPlan && fleetCount > fleetLimit) {
-      setError(`❌ Fleet limit exceeds allowed maximum for this plan (${fleetLimit}).`);
-      return;
+    try {
+      if (isEdit) {
+        await updateCustomer(formData, initialValues._id);
+      } else {
+        await createCustomer(formData);
+      }
+      onClose();
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Something went wrong');
     }
-
-    console.log("Form submitted:", form);
-    onSubmit(form);
-    setForm(initialFormState);
   };
 
-  const currentPlanName = (() => {
-    if (!form.currentPlan || plans.length === 0) return '—';
-    const plan = plans.find((p) => String(p._id) === String(form.currentPlan));
-    return plan?.name_en || '—';
-  })();
-
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {error && (
-        <div className="md:col-span-2">
+        <div className="col-span-2">
           <ErrorMessage message={error} />
         </div>
       )}
 
-      <div>
-        <label className="block mb-1 font-medium">Customer</label>
-        <select
-          name="customer"
-          value={form.customer}
+      {/* Logo Upload Field */}
+      <div className="col-span-2">
+        <label className="block text-sm font-medium mb-1">Company Logo</label>
+        <input
+          name="logo"
+          type="file"
+          accept="image/*"
           onChange={handleChange}
-          className="input-style"
-        >
-          <option value="">Select...</option>
-          {customers.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.companyName}
-            </option>
+          className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4
+            file:rounded file:border-0 file:text-sm file:font-semibold
+            file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Company Name</label>
+        <input name="companyName" value={form.companyName} onChange={handleChange} required className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Contact Person</label>
+        <input name="contactPerson" value={form.contactPerson} onChange={handleChange} required className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Email</label>
+        <input name="email" type="email" value={form.email} onChange={handleChange} required className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Phone</label>
+        <input name="phone" value={form.phone} onChange={handleChange} required className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Street</label>
+        <input name="address.street" value={form.address.street} onChange={handleChange} className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">City</label>
+        <input name="address.city" value={form.address.city} onChange={handleChange} className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">State</label>
+        <input name="address.state" value={form.address.state} onChange={handleChange} className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Zip Code</label>
+        <input name="address.zip" value={form.address.zip} onChange={handleChange} className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Country</label>
+        <input name="address.country" value={form.address.country} onChange={handleChange} className="input-style" />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-1">Current Plan</label>
+        <select name="currentPlan" value={form.currentPlan} onChange={handleChange} required className="input-style">
+          <option value="">Select Plan</option>
+          {plans.map(plan => (
+            <option key={plan._id} value={plan._id}>{plan.name_en}</option>
           ))}
         </select>
       </div>
 
       <div>
-        <label className="block mb-1 font-medium">Initial Subscription Date</label>
-        <input
-          type="date"
-          name="initialSubscriptionDate"
-          value={form.initialSubscriptionDate}
-          onChange={handleChange}
-          className="input-style"
-        />
+        <label className="block text-sm font-medium mb-1">Next Renewal Date</label>
+        <input name="nextRenewalDate" type="date" value={form.nextRenewalDate} onChange={handleChange} className="input-style" />
       </div>
 
       <div>
-        <label className="block mb-1 font-medium">Initial Plan</label>
-        <select
-          name="initialPlan"
-          value={form.initialPlan}
-          onChange={handleChange}
-          className="input-style"
-        >
-          <option value="">Select...</option>
-          {plans.map((p) => (
-            <option key={p._id} value={p._id}>
-              {p.name_en}
-            </option>
-          ))}
-        </select>
+        <label className="block text-sm font-medium mb-1">Vehicles Registered</label>
+        <input name="vehiclesRegistered" type="number" min="0" value={form.vehiclesRegistered} onChange={handleChange} className="input-style" />
+        <p className="text-xs text-gray-500 mt-1">Max allowed: {getSelectedPlanLimit()}</p>
       </div>
 
-      <div>
-        <label className="block mb-1 font-medium">Current Plan</label>
-        <input
-          type="text"
-          value={currentPlanName}
-          disabled
-          className="input-style bg-gray-100"
-        />
+      <div className="col-span-2 flex justify-end mt-4">
+        <Button type="submit">{isEdit ? 'Update Customer' : 'Save Customer'}</Button>
       </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Current Plan Date</label>
-        <input
-          type="date"
-          name="currentPlanDate"
-          value={form.currentPlanDate}
-          onChange={handleChange}
-          className="input-style"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Fleet Limit</label>
-        <input
-          type="number"
-          name="currentFleetAmount"
-          value={form.currentFleetAmount}
-          onChange={handleChange}
-          className="input-style"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Recurrence</label>
-        <select
-          name="recurrence"
-          value={form.recurrence}
-          onChange={handleChange}
-          className="input-style"
-        >
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Price (USD)</label>
-        <input
-          type="number"
-          name="price"
-          value={form.price}
-          onChange={handleChange}
-          className="input-style"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Next Renewal Date</label>
-        <input
-          type="date"
-          name="nextRenewalDate"
-          value={form.nextRenewalDate}
-          disabled
-          className="input-style bg-gray-100"
-        />
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Status</label>
-        <select
-          name="status"
-          value={form.status}
-          onChange={handleChange}
-          className="input-style"
-        >
-          <option value="active">Active</option>
-          <option value="expired">Expired</option>
-        </select>
-      </div>
-
-      <div className="md:col-span-2 text-right">
-        <button
-          type="submit"
-          className="bg-blue-600 text-white py-2 px-6 rounded shadow"
-        >
-          Save Subscriber
-        </button>
-      </div>
-
-
     </form>
   );
 };
 
-export default SubscriberForm;
+export default CustomerForm;

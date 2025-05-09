@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { fetchPlans, addPlan } from '@/services/planService';
+import { fetchPlans, addPlan, updatePlan } from '@/services/planService';
 import BackButton from '@/components/ui/BackButton';
 import PlanForm from './components/PlanForm';
+import EditModal from '@/components/ui/EditModal';
+import EditButton from '@/components/ui/EditButton';
 
 const PlansPage = () => {
   const [plans, setPlans] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadPlans = async () => {
@@ -20,9 +23,23 @@ const PlansPage = () => {
   };
 
   const handleAdd = async (formData) => {
-    await addPlan(formData);
-    setShowForm(false);
-    loadPlans();
+    try {
+      await addPlan(formData);
+      setShowForm(false);
+      loadPlans();
+    } catch (error) {
+      console.error('Error adding plan:', error);
+    }
+  };
+
+  const handleEdit = async (formData) => {
+    try {
+      await updatePlan(editingPlan._id, formData);
+      setEditingPlan(null);
+      loadPlans();
+    } catch (error) {
+      console.error('Error updating plan:', error);
+    }
   };
 
   useEffect(() => {
@@ -54,16 +71,17 @@ const PlansPage = () => {
                 <th className="p-3 text-left">Amount</th>
                 <th className="p-3 text-left">Fleet Limit</th>
                 <th className="p-3 text-left">Taxes</th>
+                <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="6" className="p-4 text-center text-gray-500">Loading...</td>
+                  <td colSpan="7" className="p-4 text-center text-gray-500">Loading...</td>
                 </tr>
               ) : plans.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="p-4 text-center text-gray-400">No plans found.</td>
+                  <td colSpan="7" className="p-4 text-center text-gray-400">No plans found.</td>
                 </tr>
               ) : (
                 plans.map((plan) => (
@@ -78,6 +96,9 @@ const PlansPage = () => {
                         ? plan.applicableTaxes.map((t) => t.name).join(', ')
                         : '—'}
                     </td>
+                    <td className="p-3">
+                      <EditButton onClick={() => setEditingPlan(plan)} />
+                    </td>
                   </tr>
                 ))
               )}
@@ -86,6 +107,7 @@ const PlansPage = () => {
         </div>
       </div>
 
+      {/* Add Plan Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-3xl relative">
@@ -96,9 +118,28 @@ const PlansPage = () => {
               &times;
             </button>
             <h2 className="text-xl font-bold text-blue-700 mb-4">Add New Plan</h2>
-            <PlanForm onSubmit={handleAdd} />
+            <PlanForm
+              onSubmit={handleAdd}
+              onClose={() => setShowForm(false)}
+            />
           </div>
         </div>
+      )}
+
+      {/* Edit Plan Modal */}
+      {editingPlan && (
+        <EditModal
+          isOpen={!!editingPlan}
+          onClose={() => setEditingPlan(null)}
+          title="Edit Plan"
+        >
+          <PlanForm
+            initialValues={editingPlan}
+            isEdit
+            onSubmit={handleEdit}
+            onClose={() => setEditingPlan(null)}
+          />
+        </EditModal>
       )}
     </div>
   );

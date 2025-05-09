@@ -1,10 +1,10 @@
-// CustomersPage.jsx
 import React, { useEffect, useState } from 'react';
 import CustomerForm from './components/CustomerForm';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import EditModal from '@/components/ui/EditModal';
-import axios from 'axios';
+import EditButton from '@/components/ui/EditButton';
+import { fetchCustomers as fetchCustomersAPI } from '@/services/customerService'; // ✅ use service
 
 const CustomersPage = () => {
   const [showForm, setShowForm] = useState(false);
@@ -14,7 +14,7 @@ const CustomersPage = () => {
 
   const fetchCustomers = () => {
     setLoading(true);
-    axios.get('/api/customers')
+    fetchCustomersAPI()
       .then(res => {
         const data = res.data;
         if (Array.isArray(data)) {
@@ -86,12 +86,7 @@ const CustomersPage = () => {
                       : '—'}
                   </td>
                   <td className="p-3">
-                    <button
-                      onClick={() => setEditingCustomer(customer)}
-                      className="text-blue-600 underline text-sm"
-                    >
-                      Edit
-                    </button>
+                    <EditButton onClick={() => setEditingCustomer(customer)} />
                   </td>
                 </tr>
               ))
