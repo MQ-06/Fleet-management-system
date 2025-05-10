@@ -80,7 +80,7 @@ const SuppliersPage = () => {
               <tr><td colSpan="6" className="text-center py-4">No suppliers found.</td></tr>
             ) : (
               suppliers.map((s) => (
-                <tr key={s._id} className="border-t">
+                <tr key={s._id} className="border-t hover:bg-gray-50">
                   <td className="p-2">{s.name}</td>
                   <td className="p-2">{s.customer?.companyName}</td>
                   <td className="p-2 capitalize">{s.type}</td>

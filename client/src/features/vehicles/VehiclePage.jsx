@@ -83,7 +83,7 @@ const VehiclesPage = () => {
               <tbody>
                 {vehicles.length > 0 ? (
                   vehicles.map((v) => (
-                    <tr key={v._id} className="border-t border-gray-200 hover:bg-blue-50 transition">
+                    <tr key={v._id} className="border-t border-gray-200 hover:bg-gray-50 transition">
                       <td className="p-3">{v.name}</td>
                       <td className="p-3">{v.vin}</td>
                       <td className="p-3">{v.licensePlate}</td>

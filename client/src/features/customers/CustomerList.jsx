@@ -48,10 +48,10 @@ const CustomersPage = () => {
         <Button onClick={() => setShowForm(true)}>Add Customer</Button>
       </div>
 
-      <div className="overflow-x-auto rounded shadow-sm border border-gray-200">
+      <div className="overflow-x-auto rounded shadow-sm border border-gray-200 ">
         <table className="w-full text-sm">
           <thead className="bg-blue-900 text-white">
-            <tr>
+            <tr >
               <th className="p-3 text-left">Company Name</th>
               <th className="p-3 text-left">Contact Person</th>
               <th className="p-3 text-left">Email</th>
@@ -73,7 +73,7 @@ const CustomersPage = () => {
               </tr>
             ) : (
               customers.map(customer => (
-                <tr key={customer._id} className="border-t">
+                <tr key={customer._id} className="border-t hover:bg-gray-50">
                   <td className="p-3">{customer.companyName}</td>
                   <td className="p-3">{customer.contactPerson}</td>
                   <td className="p-3">{customer.email}</td>

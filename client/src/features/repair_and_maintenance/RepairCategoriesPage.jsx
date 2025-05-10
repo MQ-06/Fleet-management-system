@@ -94,7 +94,7 @@ const RepairCategoriesPage = () => {
             <tbody>
               {data.length > 0 ? (
                 data.map((item) => (
-                  <tr key={item._id} className="border-t hover:bg-blue-50">
+                  <tr key={item._id} className="border-t hover:bg-gray-50">
                     <td className="p-3">{item.customer?.companyName || 'N/A'}</td>
                     <td className="p-3">{item.type}</td>
                     <td className="p-3">{item.categoryEn}</td>

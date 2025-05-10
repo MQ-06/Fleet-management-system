@@ -1,4 +1,3 @@
-// src/features/vehicles/components/VehicleForm.jsx
 import { useEffect, useState } from 'react';
 import { fetchCustomers } from '@/services/customerService';
 import { fetchFleets } from '@/services/fleetService';
@@ -6,8 +5,12 @@ import ErrorMessage from '@/components/ui/ErrorMessage';
 
 const VehicleForm = ({ onSubmit }) => {
   const [form, setForm] = useState({
-    customer: '', fleet: '', name: '', vin: '', licensePlate: '', brand: '', color: '', year: '', mileage: '', purchaseDate: '', cost: '', ownership: '', amountPaid: '', monthlyPayment: '', paymentDay: '', finalPaymentDate: '', notes: '', labels: []
+    customer: '', fleet: '', name: '', vin: '', licensePlate: '', brand: '',
+    color: '', year: '', mileage: '', purchaseDate: '', cost: '', ownership: '',
+    amountPaid: '', monthlyPayment: '', paymentDay: '', finalPaymentDate: '',
+    notes: '', labels: []
   });
+
   const [customers, setCustomers] = useState([]);
   const [fleets, setFleets] = useState([]);
   const [photos, setPhotos] = useState([]);
@@ -18,6 +21,12 @@ const VehicleForm = ({ onSubmit }) => {
     fetchCustomers().then(res => setCustomers(res.data)).catch(() => setCustomers([]));
     fetchFleets().then(res => setFleets(res.data)).catch(() => setFleets([]));
   }, []);
+
+  useEffect(() => {
+    return () => {
+      photos.forEach(file => file.preview && URL.revokeObjectURL(file.preview));
+    };
+  }, [photos]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,6 +50,31 @@ const VehicleForm = ({ onSubmit }) => {
   const inputClass = (field) =>
     `p-3 border rounded focus:ring-2 focus:ring-blue-400 outline-none ${errors[field] ? 'border-red-500' : 'border-gray-300'}`;
 
+  const handlePhotoChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    const totalFiles = [...photos, ...selectedFiles].slice(0, 5);
+
+    const withPreview = totalFiles.map(file => {
+      return file.preview ? file : Object.assign(file, {
+        preview: URL.createObjectURL(file)
+      });
+    });
+
+    setPhotos(withPreview);
+  };
+
+  const handleDocumentChange = (e, index) => {
+    const newDocs = [...documents];
+    newDocs[index] = { ...newDocs[index], file: e.target.files[0] };
+    setDocuments(newDocs);
+  };
+
+  const handleDocumentLabelChange = (e, index) => {
+    const newDocs = [...documents];
+    newDocs[index] = { ...newDocs[index], label: e.target.value };
+    setDocuments(newDocs);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const validationErrors = validate();
@@ -48,18 +82,21 @@ const VehicleForm = ({ onSubmit }) => {
       setErrors(validationErrors);
       return;
     }
+
     const formData = new FormData();
     Object.entries(form).forEach(([key, value]) => formData.append(key, value));
-    photos.forEach(p => formData.append('photos', p));
-    documents.forEach((doc, i) => {
-      formData.append('documents', doc.file);
-      formData.append('labels', doc.label);
+
+    photos.forEach(photo => formData.append('photos', photo));
+    documents.forEach(doc => {
+      if (doc?.file) formData.append('documents', doc.file);
+      formData.append('labels', doc.label || '');
     });
+
     onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className=" p-6">
+    <form onSubmit={handleSubmit} className="p-6">
       <h3 className="text-lg font-semibold mb-6 text-blue-600">Add New Vehicle</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,17 +169,34 @@ const VehicleForm = ({ onSubmit }) => {
           ></textarea>
         </div>
 
+        {/* PHOTO UPLOAD + PREVIEW */}
         <div className="md:col-span-2">
           <label className="block mb-1 font-medium">Upload Photos (max 5)</label>
           <input
             type="file"
             multiple
             accept="image/*"
+            onChange={handlePhotoChange}
             className="file:bg-blue-600 file:text-white file:rounded file:px-4 file:py-2 file:border-0 text-gray-600"
-            onChange={(e) => setPhotos([...e.target.files].slice(0, 5))}
           />
+          <p className="text-sm text-gray-500 mt-1">Selected: {photos.length} / 5</p>
+
+          {photos.length > 0 && (
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2">
+              {photos.map((file, idx) => (
+                <div key={idx} className="border rounded p-1">
+                  <img
+                    src={file.preview}
+                    alt={`preview-${idx}`}
+                    className="w-full h-24 object-cover rounded"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* DOCUMENTS */}
         <div className="md:col-span-2">
           <label className="block mb-1 font-medium">Upload Documents</label>
           {[...Array(3)].map((_, i) => (
@@ -150,21 +204,13 @@ const VehicleForm = ({ onSubmit }) => {
               <input
                 type="file"
                 className="file:bg-blue-600 file:text-white file:rounded file:px-4 file:py-2 file:border-0 text-gray-600"
-                onChange={(e) => {
-                  const newDocs = [...documents];
-                  newDocs[i] = { ...newDocs[i], file: e.target.files[0] };
-                  setDocuments(newDocs);
-                }}
+                onChange={(e) => handleDocumentChange(e, i)}
               />
               <input
                 type="text"
                 placeholder="Label"
                 className="p-2 border border-gray-300 rounded"
-                onChange={(e) => {
-                  const newDocs = [...documents];
-                  newDocs[i] = { ...newDocs[i], label: e.target.value };
-                  setDocuments(newDocs);
-                }}
+                onChange={(e) => handleDocumentLabelChange(e, i)}
               />
             </div>
           ))}

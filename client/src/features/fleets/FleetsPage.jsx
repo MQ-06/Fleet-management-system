@@ -77,7 +77,7 @@ const FleetsPage = () => {
               <tr><td colSpan="4" className="p-4 text-center">No fleets found.</td></tr>
             ) : (
               fleets.map((fleet) => (
-                <tr key={fleet._id} className="border-t">
+                <tr key={fleet._id} className="border-t hover:bg-gray-50">
                   <td className="p-2">{fleet.name}</td>
                   <td className="p-2">{fleet.customer?.companyName}</td>
                   <td className="p-2">{fleet.supervisor}</td>

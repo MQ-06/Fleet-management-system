@@ -1,6 +1,4 @@
 const Vehicle = require('../models/Vehicle');
-const fs = require('fs');
-const path = require('path');
 
 exports.getVehicles = async (req, res) => {
   try {
