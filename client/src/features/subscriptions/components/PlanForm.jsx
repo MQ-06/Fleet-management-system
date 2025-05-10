@@ -21,7 +21,8 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
 
   useEffect(() => {
     fetchTaxes().then((res) => {
-      const options = res.data.map((tax) => ({
+      const activeTaxes = res.data.filter((tax) => tax.active); // ✅ only active taxes
+      const options = activeTaxes.map((tax) => ({
         label: `${tax.name} (${tax.amount}${tax.type === 'percentage' ? '%' : '$'})`,
         value: tax._id,
       }));
@@ -38,7 +39,7 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
-    setErrors((prev) => ({ ...prev, [name]: '' })); 
+    setErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleTaxChange = (selected) => {

@@ -13,5 +13,6 @@ const upload = multer({ storage });
 router.post('/', upload.single('logo'), customerController.createCustomer);
 router.get('/', customerController.getCustomers);
 router.post('/:id/update', upload.single('logo'), customerController.updateCustomer);
+router.post('/:id/toggle-status', customerController.toggleCustomerStatus);
 
 module.exports = router;

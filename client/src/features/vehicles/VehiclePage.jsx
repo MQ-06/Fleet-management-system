@@ -1,14 +1,17 @@
-// src/features/vehicles/VehiclesPage.jsx
 import { useEffect, useState } from 'react';
-import { fetchVehicles, addVehicle } from '@/services/vehicleService';
+import { fetchVehicles, addVehicle, updateVehicle, toggleVehicleStatus } from '@/services/vehicleService';
 import VehicleForm from './components/VehicleForm';
 import { FaCar } from 'react-icons/fa';
 import BackButton from '@/components/ui/BackButton';
+import EditButton from '@/components/ui/EditButton';
+import ToggleButton from '@/components/ui/ToggleButton';
+import EditModal from '@/components/ui/EditModal';
 
 const VehiclesPage = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(null);
 
   const loadVehicles = async () => {
     try {
@@ -36,18 +39,48 @@ const VehiclesPage = () => {
     }
   };
 
+  const handleUpdate = async (formData) => {
+    try {
+      await updateVehicle(editingVehicle._id, formData);
+      setEditingVehicle(null);
+      loadVehicles();
+    } catch (err) {
+      console.error('Failed to update vehicle:', err);
+    }
+  };
+
+  const handleToggle = async (vehicle) => {
+    try {
+      await toggleVehicleStatus(vehicle._id, !vehicle.active);
+      loadVehicles();
+    } catch (err) {
+      console.error('Failed to toggle vehicle status:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white text-black p-4">
-      {showModal && (
+      {(showModal || editingVehicle) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start pt-10 z-50 overflow-y-auto">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl relative">
             <button
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                setEditingVehicle(null);
+              }}
               className="absolute top-2 right-4 text-gray-500 hover:text-black text-xl"
             >
               &times;
             </button>
-            <VehicleForm onSubmit={handleAdd} />
+            <VehicleForm
+              onSubmit={editingVehicle ? handleUpdate : handleAdd}
+              initialValues={editingVehicle || {}}
+              isEdit={!!editingVehicle}
+              onClose={() => {
+                setShowModal(false);
+                setEditingVehicle(null);
+              }}
+            />
           </div>
         </div>
       )}
@@ -78,6 +111,7 @@ const VehiclesPage = () => {
                   <th className="p-3 text-left">VIN</th>
                   <th className="p-3 text-left">License Plate</th>
                   <th className="p-3 text-left">Fleet</th>
+                  <th className="p-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -88,11 +122,15 @@ const VehiclesPage = () => {
                       <td className="p-3">{v.vin}</td>
                       <td className="p-3">{v.licensePlate}</td>
                       <td className="p-3">{v.fleet?.name}</td>
+                      <td className="p-3 flex gap-2">
+                        <EditButton onClick={() => setEditingVehicle(v)} />
+                        <ToggleButton isActive={v.active} onToggle={() => handleToggle(v)} />
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="p-4 text-center text-gray-400">
+                    <td colSpan="5" className="p-4 text-center text-gray-400">
                       No vehicles found.
                     </td>
                   </tr>

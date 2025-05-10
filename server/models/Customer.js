@@ -16,6 +16,7 @@ const customerSchema = new mongoose.Schema({
   currentPlan: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan' },
   nextRenewalDate: { type: Date },
   vehiclesRegistered: { type: Number, default: 0 },
+  active: { type: Boolean, default: true } // ✅ NEW FIELD
 }, { timestamps: true });
 
 module.exports = mongoose.model('Customer', customerSchema);

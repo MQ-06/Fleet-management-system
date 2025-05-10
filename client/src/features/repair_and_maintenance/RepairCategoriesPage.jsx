@@ -1,8 +1,12 @@
-// ✅ src/pages/RepairCategoriesPage.jsx
 import { useEffect, useState } from 'react';
-import { fetchRepairCategories, addRepairCategory, updateRepairCategory } from '@/services/repairCategoryService';
+import {
+  fetchRepairCategories,
+  updateRepairCategory,
+  toggleRepairCategoryStatus
+} from '@/services/repairCategoryService';
 import BackButton from '@/components/ui/BackButton';
 import EditButton from '@/components/ui/EditButton';
+import ToggleButton from '@/components/ui/ToggleButton';
 import EditModal from '@/components/ui/EditModal';
 import RepairCategoryForm from './components/RepairCategoryForm';
 
@@ -36,6 +40,15 @@ const RepairCategoriesPage = () => {
   const handleEditSubmit = async (updatedData) => {
     await updateRepairCategory(editingCategory._id, updatedData);
     handleSuccess();
+  };
+
+  const handleToggle = async (item) => {
+    try {
+      await toggleRepairCategoryStatus(item._id, !item.active);
+      loadCategories();
+    } catch (err) {
+      console.error('Failed to toggle category:', err);
+    }
   };
 
   return (
@@ -100,8 +113,9 @@ const RepairCategoriesPage = () => {
                     <td className="p-3">{item.categoryEn}</td>
                     <td className="p-3">{item.categoryEs}</td>
                     <td className="p-3">{item.supplierTypes?.map((s) => s.type).join(', ')}</td>
-                    <td className="p-3">
+                    <td className="p-3 flex gap-2">
                       <EditButton onClick={() => setEditingCategory(item)} />
+                      <ToggleButton isActive={item.active} onToggle={() => handleToggle(item)} />
                     </td>
                   </tr>
                 ))

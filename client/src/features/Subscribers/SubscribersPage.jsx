@@ -1,4 +1,3 @@
-// src/pages/SubscribersPage.jsx
 import { useEffect, useState } from 'react';
 import BackButton from '@/components/ui/BackButton';
 import EditButton from '@/components/ui/EditButton';
@@ -73,9 +72,13 @@ const SubscribersPage = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="11" className="p-4 text-center text-gray-500">Loading...</td></tr>
+                <tr>
+                  <td colSpan="11" className="p-4 text-center text-gray-500">Loading...</td>
+                </tr>
               ) : subscribers.length === 0 ? (
-                <tr><td colSpan="11" className="p-4 text-center text-gray-400">No subscribers found.</td></tr>
+                <tr>
+                  <td colSpan="11" className="p-4 text-center text-gray-400">No subscribers found.</td>
+                </tr>
               ) : (
                 subscribers.map((sub) => (
                   <tr key={sub._id} className="border-t hover:bg-gray-50 transition">
@@ -88,7 +91,17 @@ const SubscribersPage = () => {
                     <td className="p-3">{sub.recurrence}</td>
                     <td className="p-3">${sub.price}</td>
                     <td className="p-3">{new Date(sub.nextRenewalDate).toLocaleDateString()}</td>
-                    <td className="p-3">{sub.status}</td>
+                    <td className="p-3">
+                      <span
+                        className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                          sub.status === 'active'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {sub.status}
+                      </span>
+                    </td>
                     <td className="p-3">
                       <EditButton onClick={() => setEditingSubscriber(sub)} />
                     </td>

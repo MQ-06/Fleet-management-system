@@ -1,4 +1,3 @@
-// src/pages/components/SupplierForm.jsx
 import { useEffect, useState } from 'react';
 import { fetchCustomers } from '@/services/customerService';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -17,23 +16,32 @@ const SupplierForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose })
       zip: '',
       country: ''
     },
-    type: ''
+    type: '',
+    active: true
   });
   const [logoFile, setLogoFile] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    fetchCustomers().then(res => setCustomers(res.data)).catch(() => setCustomers([]));
+    fetchCustomers()
+      .then(res => setCustomers(res.data.filter(c => c.active))) // ✅ Only active customers
+      .catch(() => setCustomers([]));
   }, []);
 
   useEffect(() => {
     if (initialValues && isEdit) {
       setForm({
-        ...initialValues,
+        customer: initialValues.customer?._id || '',
+        name: initialValues.name || '',
+        contactPerson: initialValues.contactPerson || '',
+        phone: initialValues.phone || '',
+        email: initialValues.email || '',
         address: initialValues.address || {
           street: '', city: '', state: '', zip: '', country: ''
-        }
+        },
+        type: initialValues.type || '',
+        active: typeof initialValues.active === 'boolean' ? initialValues.active : true
       });
     }
   }, [initialValues, isEdit]);
@@ -51,9 +59,12 @@ const SupplierForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose })
 
   const validate = () => {
     const errs = {};
-    if (!form.name) errs.name = 'Supplier name required';
-    if (!form.customer) errs.customer = 'Customer required';
-    if (!form.type) errs.type = 'Type required';
+    if (!form.name) errs.name = 'Supplier name is required';
+    if (!form.customer) errs.customer = 'Customer is required';
+    if (!form.type) errs.type = 'Type is required';
+    if (!form.email) errs.email = 'Email is required';
+    if (!form.phone) errs.phone = 'Phone is required';
+    if (!form.contactPerson) errs.contactPerson = 'Contact person is required';
     return errs;
   };
 
@@ -117,16 +128,19 @@ const SupplierForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose })
       <div>
         <label>Contact Person</label>
         <input name="contactPerson" value={form.contactPerson} onChange={handleChange} className="input-style" />
+        <ErrorMessage message={errors.contactPerson} />
       </div>
 
       <div>
         <label>Phone</label>
         <input name="phone" value={form.phone} onChange={handleChange} className="input-style" />
+        <ErrorMessage message={errors.phone} />
       </div>
 
       <div>
         <label>Email</label>
         <input name="email" value={form.email} onChange={handleChange} className="input-style" />
+        <ErrorMessage message={errors.email} />
       </div>
 
       <div className="md:col-span-2 font-semibold">Address</div>
@@ -157,7 +171,6 @@ const SupplierForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose })
       </div>
 
       <div className="md:col-span-2 flex justify-end gap-4">
-        
         <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow">
           {isEdit ? 'Update Supplier' : 'Save Supplier'}
         </button>

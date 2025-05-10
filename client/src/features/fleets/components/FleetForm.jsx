@@ -1,4 +1,3 @@
-// components/FleetForm.jsx
 import { useEffect, useState } from 'react';
 import { fetchCustomers } from '@/services/customerService';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -9,7 +8,12 @@ const FleetForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) =>
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    fetchCustomers().then(res => setCustomers(res.data)).catch(() => setCustomers([]));
+    fetchCustomers()
+      .then(res => {
+        const activeCustomers = res.data.filter(c => c.active); // ✅ Only active customers
+        setCustomers(activeCustomers);
+      })
+      .catch(() => setCustomers([]));
   }, []);
 
   useEffect(() => {
@@ -68,7 +72,6 @@ const FleetForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) =>
       </div>
 
       <div className="md:col-span-2 flex justify-end gap-4">
-       
         <button className="bg-blue-600 text-white px-4 py-2 rounded shadow" type="submit">
           {isEdit ? 'Update Fleet' : 'Save Fleet'}
         </button>

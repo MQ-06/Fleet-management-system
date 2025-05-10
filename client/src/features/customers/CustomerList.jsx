@@ -4,7 +4,11 @@ import Button from '@/components/ui/Button';
 import BackButton from '@/components/ui/BackButton';
 import EditModal from '@/components/ui/EditModal';
 import EditButton from '@/components/ui/EditButton';
-import { fetchCustomers as fetchCustomersAPI } from '@/services/customerService'; // ✅ use service
+import ToggleButton from '@/components/ui/ToggleButton';
+import {
+  fetchCustomers as fetchCustomersAPI,
+  updateCustomerStatus
+} from '@/services/customerService';
 
 const CustomersPage = () => {
   const [showForm, setShowForm] = useState(false);
@@ -48,10 +52,10 @@ const CustomersPage = () => {
         <Button onClick={() => setShowForm(true)}>Add Customer</Button>
       </div>
 
-      <div className="overflow-x-auto rounded shadow-sm border border-gray-200 ">
+      <div className="overflow-x-auto rounded shadow-sm border border-gray-200">
         <table className="w-full text-sm">
           <thead className="bg-blue-900 text-white">
-            <tr >
+            <tr>
               <th className="p-3 text-left">Company Name</th>
               <th className="p-3 text-left">Contact Person</th>
               <th className="p-3 text-left">Email</th>
@@ -85,8 +89,19 @@ const CustomersPage = () => {
                       ? new Date(customer.nextRenewalDate).toLocaleDateString()
                       : '—'}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 flex gap-2">
                     <EditButton onClick={() => setEditingCustomer(customer)} />
+                    <ToggleButton
+                      isActive={customer.active}
+                      onToggle={async () => {
+                        try {
+                          await updateCustomerStatus(customer._id);
+                          fetchCustomers();
+                        } catch (error) {
+                          console.error('Failed to toggle status:', error);
+                        }
+                      }}
+                    />
                   </td>
                 </tr>
               ))

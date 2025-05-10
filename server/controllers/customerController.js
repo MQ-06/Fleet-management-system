@@ -87,3 +87,19 @@ exports.updateCustomer = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+exports.toggleCustomerStatus = async (req, res) => {
+  try {
+    const customerId = req.params.id;
+    const customer = await Customer.findById(customerId);
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+
+    customer.active = !customer.active;
+    await customer.save();
+
+    res.status(200).json({ message: 'Customer status updated', active: customer.active });
+  } catch (error) {
+    console.error('Toggle status error:', error);
+    res.status(500).json({ error: 'Failed to update customer status' });
+  }
+};

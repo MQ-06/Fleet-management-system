@@ -8,7 +8,8 @@ const PlanSchema = new mongoose.Schema({
   recurrence: { type: String, enum: ['monthly', 'yearly'], required: true },
   amount: { type: Number, required: true },
   applicableTaxes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tax' }],
-  fleetAmount: { type: Number, required: true }
+  fleetAmount: { type: Number, required: true },
+  active: { type: Boolean, default: true } // ✅ added
 });
 
 module.exports = mongoose.model('Plan', PlanSchema);

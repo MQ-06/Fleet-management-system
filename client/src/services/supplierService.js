@@ -1,4 +1,3 @@
-// services/supplierService.js
 import api from './api';
 
 export const fetchSuppliers = () =>

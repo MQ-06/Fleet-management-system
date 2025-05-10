@@ -1,8 +1,8 @@
-// src/pages/UsersPage.jsx
 import { useEffect, useState } from 'react';
 import BackButton from '@/components/ui/BackButton';
 import EditButton from '@/components/ui/EditButton';
 import EditModal from '@/components/ui/EditModal';
+import ToggleButton from '@/components/ui/ToggleButton';
 import UserForm from './components/UserForm';
 import { fetchUsers, createUser, updateUser } from '@/services/userService';
 
@@ -33,6 +33,15 @@ const UsersPage = () => {
     await updateUser(editingUser._id, formData);
     setEditingUser(null);
     loadUsers();
+  };
+
+  const handleToggleStatus = async (user) => {
+    try {
+      await updateUser(user._id, { ...user, active: !user.active });
+      loadUsers();
+    } catch (err) {
+      console.error('Failed to toggle user status:', err);
+    }
   };
 
   useEffect(() => {
@@ -93,8 +102,12 @@ const UsersPage = () => {
                     <td className="p-3">{formatRoleLabel(user.role || user.type)}</td>
                     <td className="p-3">{user.customer?.companyName || '—'}</td>
                     <td className="p-3">{user.active ? 'Yes' : 'No'}</td>
-                    <td className="p-3">
+                    <td className="p-3 flex gap-2">
                       <EditButton onClick={() => setEditingUser(user)} />
+                      <ToggleButton
+                        isActive={user.active}
+                        onToggle={() => handleToggleStatus(user)}
+                      />
                     </td>
                   </tr>
                 ))

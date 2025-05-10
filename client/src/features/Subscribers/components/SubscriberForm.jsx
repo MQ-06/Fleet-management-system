@@ -1,4 +1,3 @@
-// src/components/SubscriberForm.jsx
 import { useEffect, useState } from 'react';
 import { fetchPlans } from '@/services/planService';
 import { fetchCustomers } from '@/services/customerService';
@@ -26,18 +25,19 @@ const SubscriberForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose 
   useEffect(() => {
     Promise.all([fetchCustomers(), fetchPlans()])
       .then(([customerRes, planRes]) => {
-        setCustomers(customerRes.data);
-        setPlans(planRes.data);
+        const activeCustomers = (customerRes.data || []).filter(c => c.active); // ✅
+        const activePlans = (planRes.data || []).filter(p => p.active);         // ✅
+        setCustomers(activeCustomers);
+        setPlans(activePlans);
       })
       .catch((err) => console.error("Error loading data:", err));
   }, []);
 
-useEffect(() => {
-  if (isEdit && initialValues) {
-    setForm({ ...initialFormState, ...initialValues });
-  }
-}, [initialValues, isEdit]);
-
+  useEffect(() => {
+    if (isEdit && initialValues) {
+      setForm({ ...initialFormState, ...initialValues });
+    }
+  }, [initialValues, isEdit]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -242,7 +242,6 @@ useEffect(() => {
       </div>
 
       <div className="md:col-span-2 flex justify-end gap-4">
-        
         <button
           type="submit"
           className="bg-blue-600 text-white py-2 px-6 rounded shadow"

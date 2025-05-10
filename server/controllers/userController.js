@@ -1,4 +1,3 @@
-// controllers/userController.js
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 
@@ -15,7 +14,6 @@ exports.getUsers = async (req, res) => {
 exports.createUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password, type, customer, active } = req.body;
-
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({

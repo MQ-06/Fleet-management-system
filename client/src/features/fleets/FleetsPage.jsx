@@ -1,9 +1,9 @@
-// pages/FleetsPage.jsx
 import { useEffect, useState } from 'react';
 import { fetchFleets, addFleet, updateFleet } from '@/services/fleetService';
 import BackButton from '@/components/ui/BackButton';
 import EditButton from '@/components/ui/EditButton';
 import EditModal from '@/components/ui/EditModal';
+import ToggleButton from '@/components/ui/ToggleButton';
 import FleetForm from './components/FleetForm';
 
 const FleetsPage = () => {
@@ -47,6 +47,15 @@ const FleetsPage = () => {
     }
   };
 
+  const handleToggle = async (fleet) => {
+    try {
+      await updateFleet(fleet._id, { ...fleet, active: !fleet.active });
+      loadFleets();
+    } catch (err) {
+      console.error('Failed to toggle fleet status:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
@@ -81,8 +90,9 @@ const FleetsPage = () => {
                   <td className="p-2">{fleet.name}</td>
                   <td className="p-2">{fleet.customer?.companyName}</td>
                   <td className="p-2">{fleet.supervisor}</td>
-                  <td className="p-2">
+                  <td className="p-2 flex gap-2">
                     <EditButton onClick={() => setEditingFleet(fleet)} />
+                    <ToggleButton isActive={fleet.active} onToggle={() => handleToggle(fleet)} />
                   </td>
                 </tr>
               ))

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { fetchTaxes, addTax, updateTax } from '@/services/taxService';
+import { fetchTaxes, addTax, updateTax, toggleTaxStatus } from '@/services/taxService';
 import BackButton from '@/components/ui/BackButton';
 import EditButton from '@/components/ui/EditButton';
+import ToggleButton from '@/components/ui/ToggleButton';
 import EditModal from '@/components/ui/EditModal';
 import TaxForm from './components/TaxForm';
 
@@ -14,8 +15,7 @@ const TaxesPage = () => {
   const loadTaxes = async () => {
     try {
       const res = await fetchTaxes();
-      const taxArray = Array.isArray(res.data) ? res.data : [];
-      setTaxes(taxArray);
+      setTaxes(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error('Error fetching taxes:', error);
       setTaxes([]);
@@ -45,6 +45,15 @@ const TaxesPage = () => {
       loadTaxes();
     } catch (error) {
       console.error('Error updating tax:', error);
+    }
+  };
+
+  const handleToggle = async (tax) => {
+    try {
+      await toggleTaxStatus(tax._id, !tax.active);
+      loadTaxes();
+    } catch (err) {
+      console.error('Failed to toggle tax status:', err);
     }
   };
 
@@ -92,8 +101,9 @@ const TaxesPage = () => {
                       {tax.type === 'percentage' ? `${tax.amount}%` : `$${tax.amount}`}
                     </td>
                     <td className="p-3">{tax.country}</td>
-                    <td className="p-3">
+                    <td className="p-3 flex gap-2">
                       <EditButton onClick={() => setEditingTax(tax)} />
+                      <ToggleButton isActive={tax.active} onToggle={() => handleToggle(tax)} />
                     </td>
                   </tr>
                 ))

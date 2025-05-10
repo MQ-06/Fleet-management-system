@@ -19,12 +19,16 @@ const RepairCategoryForm = ({ onSuccess, initialValues = {}, isEdit = false }) =
   useEffect(() => {
     const loadCustomers = async () => {
       const res = await fetch('/api/customers');
-      setCustomers(await res.json());
+      const data = await res.json();
+      const activeOnly = data.filter((c) => c.active); // ✅ Only active customers
+      setCustomers(activeOnly);
     };
 
     const loadSuppliers = async () => {
       const res = await fetch('/api/suppliers');
-      setSuppliers(await res.json());
+      const allSuppliers = await res.json();
+      const activeSuppliers = allSuppliers.filter((s) => s.active);
+      setSuppliers(activeSuppliers);
     };
 
     loadCustomers();

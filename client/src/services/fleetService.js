@@ -1,4 +1,3 @@
-// services/fleetService.js
 import axios from 'axios';
 
 export const fetchFleets = (customerId) =>

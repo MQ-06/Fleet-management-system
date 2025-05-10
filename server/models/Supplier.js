@@ -25,6 +25,10 @@ const supplierSchema = new mongoose.Schema({
     type: String,
     enum: ['mechanic', 'electro mechanic', 'body shop', 'tire center', 'transmissions', 'other'],
     required: true,
+  },
+  active: {
+    type: Boolean,
+    default: true
   }
 }, { timestamps: true });
 

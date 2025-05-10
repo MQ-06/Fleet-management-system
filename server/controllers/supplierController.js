@@ -1,4 +1,3 @@
-// controllers/supplierController.js
 const Supplier = require('../models/Supplier');
 
 exports.getSuppliers = async (req, res) => {
@@ -19,7 +18,8 @@ exports.createSupplier = async (req, res) => {
       phone,
       email,
       type,
-      address
+      address,
+      active
     } = req.body;
 
     const parsedAddress = typeof address === 'string' ? JSON.parse(address) : address;
@@ -31,6 +31,7 @@ exports.createSupplier = async (req, res) => {
       phone,
       email,
       type,
+      active: active === 'false' ? false : true,
       address: parsedAddress,
       logo: req.file ? `/uploads/supplier-logos/${req.file.filename}` : ''
     });
@@ -52,10 +53,9 @@ exports.updateSupplier = async (req, res) => {
       phone,
       email,
       type,
-      address
+      address,
+      active
     } = req.body;
-
-    const parsedAddress = typeof address === 'string' ? JSON.parse(address) : address;
 
     const updatedData = {
       customer,
@@ -64,7 +64,8 @@ exports.updateSupplier = async (req, res) => {
       phone,
       email,
       type,
-      address: parsedAddress
+      address,
+      active: active === 'false' ? false : true,
     };
 
     if (req.file) {

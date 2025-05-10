@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Plan = require('../models/Plan');
-const { updatePlan } = require('../controllers/planController');
+const { updatePlan, togglePlanActive } = require('../controllers/planController');
 
 router.get('/', async (req, res) => {
   const plans = await Plan.find().populate('applicableTaxes', 'name');
@@ -14,6 +14,6 @@ router.post('/', async (req, res) => {
   res.json(plan);
 });
 
-router.put('/:id', updatePlan); // ✅ Add this line for PUT / update
-
+router.put('/:id', updatePlan);
+router.patch('/:id/active', togglePlanActive); // ✅ added
 module.exports = router;

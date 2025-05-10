@@ -181,15 +181,7 @@ const TaxForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) => {
       </div>
 
       <div className="md:col-span-2 flex justify-end gap-4">
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-gray-200 text-gray-800 px-4 py-2 rounded"
-          >
-            Cancel
-          </button>
-        )}
+       
         <button
           type="submit"
           className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded shadow"

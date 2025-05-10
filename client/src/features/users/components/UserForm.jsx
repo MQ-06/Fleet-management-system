@@ -1,4 +1,3 @@
-// src/components/UserForm.jsx
 import { useEffect, useState } from 'react';
 import { fetchCustomers } from '@/services/customerService';
 import ErrorMessage from '@/components/ui/ErrorMessage';
@@ -23,7 +22,10 @@ const UserForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) => 
 
   useEffect(() => {
     fetchCustomers()
-      .then((res) => setCustomers(res.data))
+      .then((res) => {
+        const activeCustomers = res.data.filter(c => c.active); // ✅ Only active
+        setCustomers(activeCustomers);
+      })
       .catch(() => setError('Failed to load customers'));
   }, []);
 
@@ -191,7 +193,6 @@ const UserForm = ({ onSubmit, initialValues = {}, isEdit = false, onClose }) => 
       </div>
 
       <div className="md:col-span-2 flex justify-end gap-4">
-        
         <button type="submit" className="bg-blue-600 text-white py-2 px-6 rounded shadow">
           {isEdit ? 'Update User' : 'Save User'}
         </button>

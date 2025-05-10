@@ -39,9 +39,9 @@ const CustomerForm = ({ onClose, initialValues = {}, isEdit = false }) => {
   useEffect(() => {
     fetchPlans()
       .then(res => {
-        if (Array.isArray(res.data)) setPlans(res.data);
-        else if (Array.isArray(res.data.plans)) setPlans(res.data.plans);
-        else setPlans([]);
+        const plansData = Array.isArray(res.data) ? res.data : res.data?.plans || [];
+        const activePlans = plansData.filter(plan => plan.active); // ✅ filter only active
+        setPlans(activePlans);
       })
       .catch(() => setPlans([]));
   }, []);

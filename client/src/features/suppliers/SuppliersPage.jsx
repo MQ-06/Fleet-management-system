@@ -1,10 +1,10 @@
-// src/pages/SuppliersPage.jsx
 import { useEffect, useState } from 'react';
 import { fetchSuppliers, addSupplier, updateSupplier } from '@/services/supplierService';
 import SupplierForm from './components/SupplierForm';
 import BackButton from '@/components/ui/BackButton';
 import EditModal from '@/components/ui/EditModal';
 import EditButton from '@/components/ui/EditButton';
+import ToggleButton from '@/components/ui/ToggleButton';
 
 const SuppliersPage = () => {
   const [suppliers, setSuppliers] = useState([]);
@@ -48,6 +48,30 @@ const SuppliersPage = () => {
     }
   };
 
+  const handleToggle = async (supplier) => {
+  try {
+    const formData = new FormData();
+
+    // Append only the required fields for toggling status
+    formData.append('active', !supplier.active);
+
+    // Append required fields so the backend doesn't fail validation
+    formData.append('customer', supplier.customer?._id || supplier.customer);
+    formData.append('name', supplier.name);
+    formData.append('contactPerson', supplier.contactPerson || '');
+    formData.append('phone', supplier.phone || '');
+    formData.append('email', supplier.email || '');
+    formData.append('type', supplier.type);
+    formData.append('address', JSON.stringify(supplier.address || {}));
+
+    await updateSupplier(supplier._id, formData);
+    loadSuppliers();
+  } catch (err) {
+    console.error('Failed to toggle supplier status:', err);
+  }
+};
+
+
   return (
     <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
@@ -86,8 +110,12 @@ const SuppliersPage = () => {
                   <td className="p-2 capitalize">{s.type}</td>
                   <td className="p-2">{s.phone}</td>
                   <td className="p-2">{s.email}</td>
-                  <td className="p-2">
+                  <td className="p-2 flex gap-2">
                     <EditButton onClick={() => setEditingSupplier(s)} />
+                    <ToggleButton
+                      isActive={s.active}
+                      onToggle={() => handleToggle(s)}
+                    />
                   </td>
                 </tr>
               ))

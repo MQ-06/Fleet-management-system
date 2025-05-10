@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
-import { fetchPlans, addPlan, updatePlan } from '@/services/planService';
+import {
+  fetchPlans,
+  addPlan,
+  updatePlan,
+  togglePlanStatus
+} from '@/services/planService';
 import BackButton from '@/components/ui/BackButton';
 import PlanForm from './components/PlanForm';
 import EditModal from '@/components/ui/EditModal';
 import EditButton from '@/components/ui/EditButton';
+import ToggleButton from '@/components/ui/ToggleButton';
 
 const PlansPage = () => {
   const [plans, setPlans] = useState([]);
@@ -39,6 +45,15 @@ const PlansPage = () => {
       loadPlans();
     } catch (error) {
       console.error('Error updating plan:', error);
+    }
+  };
+
+  const handleToggle = async (plan) => {
+    try {
+      await togglePlanStatus(plan._id, !plan.active);
+      loadPlans();
+    } catch (err) {
+      console.error('Failed to toggle plan status:', err);
     }
   };
 
@@ -96,8 +111,9 @@ const PlansPage = () => {
                         ? plan.applicableTaxes.map((t) => t.name).join(', ')
                         : '—'}
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 flex gap-2">
                       <EditButton onClick={() => setEditingPlan(plan)} />
+                      <ToggleButton isActive={plan.active} onToggle={() => handleToggle(plan)} />
                     </td>
                   </tr>
                 ))
@@ -118,10 +134,7 @@ const PlansPage = () => {
               &times;
             </button>
             <h2 className="text-xl font-bold text-blue-700 mb-4">Add New Plan</h2>
-            <PlanForm
-              onSubmit={handleAdd}
-              onClose={() => setShowForm(false)}
-            />
+            <PlanForm onSubmit={handleAdd} onClose={() => setShowForm(false)} />
           </div>
         </div>
       )}

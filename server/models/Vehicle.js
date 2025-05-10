@@ -19,10 +19,8 @@ const vehicleSchema = new mongoose.Schema({
   finalPaymentDate: Date,
   notes: String,
   photos: [String],
-  documents: [{
-    filename: String,
-    label: String
-  }]
+  documents: [{ filename: String, label: String }],
+  active: { type: Boolean, default: true }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Vehicle', vehicleSchema);
