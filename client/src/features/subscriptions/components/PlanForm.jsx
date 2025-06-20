@@ -19,7 +19,6 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
   const [taxOptions, setTaxOptions] = useState([]);
   const [errors, setErrors] = useState({});
 
-  // Fetch taxes once on mount
   useEffect(() => {
     fetchTaxes().then((res) => {
       const activeTaxes = res.data.filter((tax) => tax.active);
@@ -31,7 +30,6 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
     });
   }, []);
 
-  // Only apply initial values once when editing
   useEffect(() => {
     if (isEdit && Object.keys(initialValues).length > 0) {
       setForm({
@@ -42,7 +40,7 @@ const PlanForm = ({ onSubmit, initialValues = {}, isEdit = false }) => {
         applicableTaxes: initialValues.applicableTaxes || [],
       });
     }
-  }, []); // ❗ run only once on mount
+  }, []); 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
