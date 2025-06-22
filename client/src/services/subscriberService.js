@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+export const fetchSubscribers = () => axios.get('/api/subscribers');
 
-export const fetchSubscribers = () => axios.get(`${BASE_URL}/subscribers`);
+export const createSubscriber = (data) => axios.post('/api/subscribers', data);
 
-export const createSubscriber = (data) => axios.post(`${BASE_URL}/subscribers`, data);
-
-export const updateSubscriber = (id, data) => axios.put(`${BASE_URL}/subscribers/${id}`, data);
+export const updateSubscriber = (id, data) => axios.put(`/api/subscribers/${id}`, data);
