@@ -79,6 +79,15 @@ app.use('/api/payments', paymentsRoute);
 const webhooksRoute = require('./routes/webhooks');
 app.use('/webhooks', webhooksRoute);
 
+// Serve static files from the frontend (Vite/React) build
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Fallback for SPA routing (e.g., React Router)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+});
+
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
