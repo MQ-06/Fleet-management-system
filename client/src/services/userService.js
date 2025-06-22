@@ -1,5 +1,7 @@
-import api from './api';
+import axios from 'axios';
 
-export const fetchUsers = () => api.get('/users');
-export const createUser = (data) => api.post('/users', data);
-export const updateUser = (id, data) => api.put(`/users/${id}`, data);
+const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+
+export const fetchUsers = () => axios.get(`${BASE_URL}/users`);
+export const createUser = (data) => axios.post(`${BASE_URL}/users`, data);
+export const updateUser = (id, data) => axios.put(`${BASE_URL}/users/${id}`, data);
