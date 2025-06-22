@@ -189,6 +189,8 @@ const MaintenanceRepairForm = ({ onSubmit, initialValues = {}, isEdit = false })
   };
 
   return (
+        <div className="max-h-[80vh] overflow-y-auto p-2">
+
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
         <label>Customer</label>
@@ -351,6 +353,7 @@ const MaintenanceRepairForm = ({ onSubmit, initialValues = {}, isEdit = false })
         </button>
       </div>
     </form>
+     </div>
   );
 };
 
