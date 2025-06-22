@@ -9,17 +9,25 @@ const TranslationList = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  const loadTranslations = async () => {
-    try {
-      const res = await fetchTranslations();
-      setData(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error('Error fetching translations:', err);
-      setData([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+const loadTranslations = async () => {
+  try {
+    const res = await fetchTranslations();
+
+    const translations = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data.translations)
+      ? res.data.translations
+      : [];
+
+    setData(translations);
+  } catch (err) {
+    console.error('Error fetching translations:', err);
+    setData([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     loadTranslations();
@@ -32,7 +40,6 @@ const TranslationList = () => {
 
   return (
     <div className="min-h-screen bg-white text-black p-4">
-      {/* ✅ Modal on Top */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start pt-10 z-50 overflow-y-auto">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl relative">

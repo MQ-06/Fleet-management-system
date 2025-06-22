@@ -1,5 +1,10 @@
+// translations.js
+import axios from 'axios';
 
-import API from './api';
+const BASE = '/api/translations';
 
-export const fetchTranslations = () => API.get('/translations');
-export const addTranslation = (data) => API.post('/translations', data);
+export const fetchTranslations = () => axios.get(BASE);
+
+export const addTranslation = (data) => axios.post(BASE, data);
+
+
