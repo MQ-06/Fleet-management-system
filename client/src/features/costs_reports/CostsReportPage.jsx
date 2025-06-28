@@ -21,42 +21,51 @@ const CostsReportPage = () => {
 
   const [reportData, setReportData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [fleets, setFleets] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [fleets, setFleets] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
+  const [types, setTypes] = useState(['repair', 'maintenance']);
+
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [selected, setSelected] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
+    setFilters(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'customer') {
+      const customer = customers.find(c => c._id === value);
+      setSelectedCustomer(customer);
+      setFilters(prev => ({
+        ...prev,
+        fleet: '',
+        vehicle: '',
+        supplier: '',
+        category: '',
+        type: ''
+      }));
+    }
+
+    if (name === 'fleet') {
+      setFilters(prev => ({
+        ...prev,
+        vehicle: ''
+      }));
+    }
+
+    if (name === 'vehicle') {
+      const vehicle = vehicles.find(v => v._id === value);
+      setSelectedVehicle(vehicle);
+    }
   };
 
   const loadReport = async () => {
     setLoading(true);
     try {
-      const mappedFilters = { ...filters };
-
-      if (filters.customer) {
-        const customer = customers.find(c => c.companyName.toLowerCase() === filters.customer.toLowerCase());
-        if (customer) mappedFilters.customer = customer._id;
-        else delete mappedFilters.customer;
-      }
-
-      if (filters.fleet) {
-        const fleet = fleets.find(f => f.name.toLowerCase() === filters.fleet.toLowerCase());
-        if (fleet) mappedFilters.fleet = fleet._id;
-        else delete mappedFilters.fleet;
-      }
-
-      if (filters.vehicle) {
-        const vehicle = vehicles.find(v => v.name.toLowerCase() === filters.vehicle.toLowerCase());
-        if (vehicle) mappedFilters.vehicle = vehicle._id;
-        else delete mappedFilters.vehicle;
-      }
-
-      const res = await fetchCostReports(mappedFilters);
+      const res = await fetchCostReports(filters);
       const data = res?.data?.data || [];
       setReportData(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -67,14 +76,49 @@ const CostsReportPage = () => {
     }
   };
 
+  const fetchData = async () => {
+    try {
+      const [
+        customerRes,
+        vehicleRes,
+        fleetRes,
+        supplierRes,
+        categoryRes
+      ] = await Promise.all([
+        fetchCustomers(),
+        fetchVehicles(),
+        fetchFleets(),
+        fetchSuppliers(),
+        fetchRepairCategories()
+      ]);
+      setCustomers(customerRes.data.filter(c => c.active === true));
+      setVehicles(vehicleRes.data.filter(v => v.active === true));
+      setFleets(fleetRes.data.filter(f => f.active === true));
+      setSuppliers(supplierRes.data.filter(s => s.active === true));
+      setCategories(categoryRes.data.filter(c => c.active === true));
+    } catch (error) {
+      console.error('Error fetching dropdown data:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchData();
     loadReport();
-    fetchSuppliers().then(res => setSuppliers(res.data)).catch(() => {});
-    fetchRepairCategories().then(res => setCategories(res.data)).catch(() => {});
-    fetchCustomers().then(res => setCustomers(res.data)).catch(() => {});
-    fetchFleets().then(res => setFleets(res.data)).catch(() => {});
-    fetchVehicles().then(res => setVehicles(res.data)).catch(() => {});
   }, []);
+
+  const filteredFleets = fleets.filter(
+    f => f.customer?._id === filters.customer
+  );
+  const filteredVehicles = vehicles.filter(
+    v => v.customer?._id === filters.customer &&
+         v.fleet?._id === filters.fleet
+  );
+  const filteredSuppliers = suppliers.filter(
+    s => s.customer?._id === filters.customer
+  );
+  const filteredCategories = categories.filter(
+    c => c.customer?._id === filters.customer
+  );
 
   const totalCost = Array.isArray(reportData)
     ? reportData.reduce((sum, item) => sum + (item.totalCost || 0), 0)
@@ -84,37 +128,58 @@ const CostsReportPage = () => {
     <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-6xl mx-auto bg-white p-6 rounded-xl shadow">
         <BackButton />
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-blue-800">Costs Reports</h2>
-        </div>
+        <h2 className="text-2xl font-bold text-blue-800 mb-6">Costs Reports</h2>
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium">Customer</label>
-            <input name="customer" value={filters.customer} onChange={handleChange} className="input-style w-full" />
+            <select name="customer" value={filters.customer} onChange={handleChange} className="input-style w-full">
+              <option value="">All Customers</option>
+              {customers.map(c => (
+                <option key={c._id} value={c._id}>{c.companyName}</option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium">Fleet</label>
-            <input name="fleet" value={filters.fleet} onChange={handleChange} className="input-style w-full" />
+            <select name="fleet" value={filters.fleet} onChange={handleChange} className="input-style w-full">
+              <option value="">All Fleets</option>
+              {filteredFleets.length === 0 && <option disabled>-- No Fleets --</option>}
+              {filteredFleets.map(f => (
+                <option key={f._id} value={f._id}>{f.name}</option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium">Vehicle</label>
-            <input name="vehicle" value={filters.vehicle} onChange={handleChange} className="input-style w-full" />
+            <select name="vehicle" value={filters.vehicle} onChange={handleChange} className="input-style w-full">
+              <option value="">All Vehicles</option>
+              {filteredVehicles.length === 0 && <option disabled>-- No Vehicles --</option>}
+              {filteredVehicles.map(v => (
+                <option key={v._id} value={v._id}>{v.name}</option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium">Type</label>
-            <input name="type" value={filters.type} onChange={handleChange} className="input-style w-full" />
+            <select name="type" value={filters.type} onChange={handleChange} className="input-style w-full">
+              <option value="">All Types</option>
+              {types.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium">Supplier</label>
             <select name="supplier" value={filters.supplier} onChange={handleChange} className="input-style w-full">
               <option value="">All Suppliers</option>
-              {suppliers.map(s => (
+              {filteredSuppliers.length === 0 && <option disabled>-- No Suppliers --</option>}
+              {filteredSuppliers.map(s => (
                 <option key={s._id} value={s._id}>{s.name}</option>
               ))}
             </select>
@@ -124,7 +189,8 @@ const CostsReportPage = () => {
             <label className="block text-sm font-medium">Category</label>
             <select name="category" value={filters.category} onChange={handleChange} className="input-style w-full">
               <option value="">All Categories</option>
-              {categories.map(c => (
+              {filteredCategories.length === 0 && <option disabled>-- No Categories --</option>}
+              {filteredCategories.map(c => (
                 <option key={c._id} value={c._id}>{c.categoryEn}</option>
               ))}
             </select>
@@ -141,19 +207,15 @@ const CostsReportPage = () => {
           </div>
         </div>
 
-        <button
-          onClick={loadReport}
-          className="bg-blue-600 text-white px-4 py-2 rounded mb-6"
-        >
+        <button onClick={loadReport} className="bg-blue-600 text-white px-4 py-2 rounded mb-6">
           Apply Filters
         </button>
 
-        {/* Table */}
         <table className="w-full border rounded">
           <thead className="bg-blue-900 text-white">
             <tr>
               <th className="p-2 text-left">Vehicle</th>
-              <th className="p-2 text-left">Repair/Maintenance</th>
+              <th className="p-2 text-left">Description</th>
               <th className="p-2 text-left">Date</th>
               <th className="p-2 text-left">Type</th>
               <th className="p-2 text-left">Supplier</th>
@@ -168,7 +230,7 @@ const CostsReportPage = () => {
             ) : reportData.length === 0 ? (
               <tr><td colSpan="8" className="p-4 text-center">No data found.</td></tr>
             ) : (
-              reportData.map((entry) => (
+              reportData.map(entry => (
                 <tr key={entry._id} className="border-t hover:bg-gray-50">
                   <td className="p-2">{entry.vehicleName}</td>
                   <td className="p-2">{entry.description}</td>
@@ -194,7 +256,6 @@ const CostsReportPage = () => {
         </table>
       </div>
 
-      {/* Modal */}
       {selected && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-2xl relative">
